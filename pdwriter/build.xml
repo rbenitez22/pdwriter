@@ -70,4 +70,29 @@
     nbproject/build-impl.xml file. 
 
     -->
+    
+    <property name="deliverable.name" value="pdwriter"/>
+    <property name="deliverable.dir" value="..\deliverables"/>
+    <property name="version" value="0.1.0"/>
+    <property name="version.dir" value="${deliverable.dir}\${version}"/>
+	
+    <target name="make-build" depends="setup,package-sources, package-doc"  >
+       <copy tofile="${root.name}.jar" file="${dist.jar}" />
+    </target>
+    
+    <target name="setup">
+        <delete dir="${version.dir}"/>
+        <buildnumber/>
+        <property name="root.name" value="${version.dir}/${deliverable.name}-${version}.${build.number}"/>
+    </target>
+    
+    <target description="bundle sources in a jar" name="package-sources">
+         <jar basedir="src" destfile="${root.name}-sources.jar"/>
+    </target>
+    
+    <target depends="-javadoc-build" description="bundle javadoc in a jar" name="package-doc">
+            <jar basedir="dist/javadoc" destfile="${root.name}-javadoc.jar"/>
+    </target> 
+    
+    
 </project>
