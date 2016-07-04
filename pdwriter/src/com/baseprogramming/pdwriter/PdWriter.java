@@ -134,7 +134,7 @@ public class PdWriter
     public void write(PdTable table, List<Map<String,Object>> data) throws IOException
     {
         yPosition-=table.getAboveSpacing().getPoints();
-        float topBorderPosition=yPosition+ + table.getHeader().getFontSize();
+        float topBorderPosition=yPosition + table.getHeader().getFontSize();
         table.setStartYPosition(topBorderPosition);
         writeColumnHeaders(table);
         PDPageContentStream stream= createStream();
@@ -264,7 +264,7 @@ public class PdWriter
         }
     }
 
-    private void writeColumnHeaders(PdTable table) throws IOException
+    protected void writeColumnHeaders(PdTable table) throws IOException
     {
         PdTableHeader header=table.getHeader();
         try(PDPageContentStream stream=createStream())
@@ -287,7 +287,7 @@ public class PdWriter
         }
     }
 
-    private float writeRow(Map<String, List<String>> wrappedRow, PdTable table, PDPageContentStream stream) throws IOException
+    protected float writeRow(Map<String, List<String>> wrappedRow, PdTable table, PDPageContentStream stream) throws IOException
     {   
         PdTableHeader header=table.getHeader();
        
@@ -308,7 +308,7 @@ public class PdWriter
         return maxRowPosition+table.getLineHeight();
     }
 
-    private int wrapRowColumnData(Map<String, Object> rowData, PdTable table, Map<String, List<String>> wrappedRow) throws IOException
+    protected int wrapRowColumnData(Map<String, Object> rowData, PdTable table, Map<String, List<String>> wrappedRow) throws IOException
     {
         int maxRowCount=0;
         for(PdColumn column : table.getHeader().getColumns())
@@ -334,7 +334,7 @@ public class PdWriter
         return maxRowCount;
     }
 
-    private float writeCellContent(PdTable table, List<String> cellContent,PDPageContentStream stream, float xPosition) throws IOException
+    protected float writeCellContent(PdTable table, List<String> cellContent,PDPageContentStream stream, float xPosition) throws IOException
     {   
         float rowYPosition=yPosition;
         for(String line : cellContent)
