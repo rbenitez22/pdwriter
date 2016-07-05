@@ -168,7 +168,7 @@ public class PdWriter
                 }
                 else if(table.getRowBorder()> 0)
                 {
-                     float borderYPosition = table.getNextBorderPosition(maxRowPosition);
+                    float borderYPosition = table.getNextBorderPosition(maxRowPosition);
                     drawRowBorder(table, borderYPosition, stream);
                     drewRowBorder=true;
                 }
@@ -192,7 +192,7 @@ public class PdWriter
         }
     }
 
-    private void drawColumnBorders(PdTable table, PDPageContentStream stream) throws IOException
+    public void drawColumnBorders(PdTable table, PDPageContentStream stream) throws IOException
     {
         if(table.getColumnBorder() <=0){return;}
         float x=table.getLeftX();
@@ -207,7 +207,7 @@ public class PdWriter
         stream.closeAndStroke();
     }
 
-    protected PDPageContentStream handlePageOverflow(PdTable table,boolean supressBottomBorder, PDPageContentStream stream) throws IOException
+    public PDPageContentStream handlePageOverflow(PdTable table,boolean supressBottomBorder, PDPageContentStream stream) throws IOException
     {
         drawBordersIfPresent(table,supressBottomBorder, stream);
         
@@ -222,7 +222,7 @@ public class PdWriter
         return stream;
     }
 
-    private void drawRowBorder(PdTable table, float yRowPosition, PDPageContentStream stream) throws IOException
+    public void drawRowBorder(PdTable table, float yRowPosition, PDPageContentStream stream) throws IOException
     {
         float x=table.getLeftX();
         float x2=table.getRightX();
@@ -230,7 +230,7 @@ public class PdWriter
         stream.closeAndStroke();
     }
 
-    private void drawBordersIfPresent(PdTable table,boolean supressBottomBorder, PDPageContentStream stream) throws IOException
+    public void drawBordersIfPresent(PdTable table,boolean supressBottomBorder, PDPageContentStream stream) throws IOException
     {
         Borders border=table.getBorder();
         if(border.hasBorders())
@@ -264,7 +264,7 @@ public class PdWriter
         }
     }
 
-    protected void writeColumnHeaders(PdTable table) throws IOException
+    public void writeColumnHeaders(PdTable table) throws IOException
     {
         PdTableHeader header=table.getHeader();
         try(PDPageContentStream stream=createStream())
@@ -287,7 +287,7 @@ public class PdWriter
         }
     }
 
-    protected float writeRow(Map<String, List<String>> wrappedRow, PdTable table, PDPageContentStream stream) throws IOException
+    public float writeRow(Map<String, List<String>> wrappedRow, PdTable table, PDPageContentStream stream) throws IOException
     {   
         PdTableHeader header=table.getHeader();
        
@@ -308,9 +308,9 @@ public class PdWriter
         return maxRowPosition+table.getLineHeight();
     }
 
-    protected int wrapRowColumnData(Map<String, Object> rowData, PdTable table, Map<String, List<String>> wrappedRow) throws IOException
+    public int wrapRowColumnData(Map<String, Object> rowData, PdTable table, Map<String, List<String>> wrappedRow) throws IOException
     {
-        int maxRowCount=0;
+        int maxRowCount=1;
         for(PdColumn column : table.getHeader().getColumns())
         {
             Object value=rowData.get(column.getName());
@@ -466,7 +466,7 @@ public class PdWriter
         }
     }
 
-    protected boolean isAtEndOfPage()
+    public boolean isAtEndOfPage()
     {
         return yPosition <=meta.getLowerLeftY();
     }
@@ -475,9 +475,8 @@ public class PdWriter
     {
         createNewPage();
         stream.close();
-        stream=createStream();
-        stream.setFont(paragraph.getFont(), paragraph.getFontSize());
-        stream.setNonStrokingColor(paragraph.getFontColor());
+        stream=createStream(paragraph);
+        
         return stream;
     }
 
@@ -488,7 +487,16 @@ public class PdWriter
         yPosition=meta.getUpperRightY();
     }
     
-    protected PDPageContentStream createStream() throws IOException
+    public PDPageContentStream createStream(PdParagraph style) throws IOException
+    {
+        PDPageContentStream stream=createStream();
+        stream.setFont(style.getFont(), style.getFontSize());
+        stream.setNonStrokingColor(style.getFontColor());
+        
+        return stream;
+    }
+    
+    public PDPageContentStream createStream() throws IOException
     {
         if(currentPage==null)
         {
