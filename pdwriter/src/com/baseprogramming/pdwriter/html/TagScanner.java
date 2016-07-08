@@ -16,7 +16,6 @@
 package com.baseprogramming.pdwriter.html;
 
 import org.jsoup.nodes.Node;
-import org.jsoup.nodes.TextNode;
 import org.jsoup.select.NodeVisitor;
 
 /**
