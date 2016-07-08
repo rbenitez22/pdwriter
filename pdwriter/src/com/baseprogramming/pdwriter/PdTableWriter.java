@@ -124,7 +124,7 @@ public class PdTableWriter implements AutoCloseable
         float textHeight = table.getTextHeight(maxRows);
         if (writer.causesPageOverflow(textHeight))
         {
-            writer.increaseYPosition(table.getLineHeight() + table.getSpacingAndPaddingGap());
+            writer.increaseYPosition(table.getTextBaseToTopBorderDistance());
             handlePageOverflow(true);
             drewRowBorder=false;
         }
@@ -134,7 +134,7 @@ public class PdTableWriter implements AutoCloseable
         writer.setLastYPosition(yPosition);
         if (writer.isAtEndOfPage())
         {
-            writer.increaseYPosition(table.getLineHeight() + table.getSpacingAndPaddingGap());
+            writer.increaseYPosition(table.getTextBaseToTopBorderDistance());
             handlePageOverflow(false);
             drewRowBorder=false;
         }
