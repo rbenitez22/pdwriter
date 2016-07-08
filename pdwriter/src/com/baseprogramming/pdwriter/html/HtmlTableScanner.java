@@ -211,7 +211,7 @@ public class HtmlTableScanner implements NodeVisitor
     
     private class THeadScanner extends TagScanner
     {
-        private Map<String,PdParagraph> styleMap= new HashMap<>();
+        private Map<String,PdParagraph> columnStyle= new HashMap<>();
 
         public THeadScanner(Node node, int depth)
         {
@@ -229,7 +229,7 @@ public class HtmlTableScanner implements NodeVisitor
                 String label=scanner.getTextContent();
                 
                 PdParagraph style=htmlWriter.createNodeStyle(node);
-                styleMap.put(id, style);
+                columnStyle.put(id, style);
                 PdUnit width = getBlockWidth(style);
                 PdColumn column= new PdColumn(id,label, width);
                 header.getColumns().add(column);
