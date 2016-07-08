@@ -154,7 +154,7 @@ public class PdTableWriter implements AutoCloseable
         return yPosition;
     }
     
-    public float writeWrappedRow(Map<String, List<String>> wrappedRow) throws IOException
+    private float writeWrappedRow(Map<String, List<String>> wrappedRow) throws IOException
     {   
         createStreamIfNull();
         PdTableHeader header=table.getHeader();
@@ -176,9 +176,9 @@ public class PdTableWriter implements AutoCloseable
         return maxRowPosition + table.getLineHeight();
     }
     
-    protected float writeCellContent(List<String> cellContent, float xPosition) throws IOException
+    private float writeCellContent(List<String> cellContent, float xPosition) throws IOException
     {   
-        createStreamIfNull();
+
         float rowYPosition=writer.getLastYPosition();
         for(String line : cellContent)
         {
@@ -274,7 +274,7 @@ public class PdTableWriter implements AutoCloseable
         return maxRowCount;
     }
     
-    public PDPageContentStream handlePageOverflow(boolean supressBottomBorder) throws IOException
+    public void handlePageOverflow(boolean supressBottomBorder) throws IOException
     {
         createStreamIfNull();
         drawBordersIfPresent(supressBottomBorder);
@@ -287,7 +287,6 @@ public class PdTableWriter implements AutoCloseable
         stream = writer.createNewPageAndContentStream(stream, table);
         float tableTopY=table.getUpperY(writer.getLastYPosition()) + table.getLineHeight() + table.getSpacingAndPaddingGap();
         table.setStartYPosition(tableTopY);
-        return stream;
     }
 
     @Override
