@@ -75,7 +75,7 @@ public class PdTableWriter implements AutoCloseable
         {
             float borderYPosition = table.getNextBorderPosition(y);
             drawRowBorder( borderYPosition);
-            y = borderYPosition - (table.getSpacingAndPaddingGap() +table.getLineHeight());
+            y = borderYPosition - (table.getTextBaseToTopBorderDistance());
         }
         else
         {
@@ -99,7 +99,7 @@ public class PdTableWriter implements AutoCloseable
             
             if(drewRowBorder)
             {
-                writer.increaseYPosition(table.getSpacingAndPaddingGap()+table.getLineHeight() + table.getRowBorder());
+                writer.increaseYPosition(table.getTextBaseToTopBorderDistance() + table.getRowBorder());
             }
             
             drawBordersIfPresent(drewRowBorder);   
