@@ -43,6 +43,4 @@ public abstract class TagScanner implements NodeVisitor
     {
         return depth;
     }
-    
-    public abstract void  handleTextNode(TextNode node);
 }

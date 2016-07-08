@@ -194,15 +194,9 @@ public class HtmlTableScanner implements NodeVisitor
             String name=node.nodeName();
             if("#text".equals(name))
             {
-                handleTextNode((TextNode)node);
+                String string = ((TextNode)node).text();
+                caption.append(string);
             }
-        }
-
-        @Override
-        public void handleTextNode(TextNode node)
-        {
-            String string=node.text();
-            caption.append(string);
         }
 
         @Override public void tail(Node node, int depth)
@@ -303,12 +297,6 @@ public class HtmlTableScanner implements NodeVisitor
                 throw new RuntimeException(e.getMessage(), e);
             }
         }
-
-        @Override
-        public void handleTextNode(TextNode node)
-        {
-            
-        }
     }
     
     private class CellScanner extends TagScanner
@@ -346,14 +334,9 @@ public class HtmlTableScanner implements NodeVisitor
             String name=node.nodeName();
             if("#text".equals(name))
             {
-                handleTextNode((TextNode)node);
+                 String string = ((TextNode) node).text();
+                content.append(string);
             }
-        }
-
-        @Override public void handleTextNode(TextNode node)
-        {
-            String string=node.text();
-            content.append(string);
         }
 
         @Override public void tail(Node node, int depth)
@@ -370,11 +353,6 @@ public class HtmlTableScanner implements NodeVisitor
         public TrScanner(Node node, int depth)
         {
             super(node, depth);
-        }
-
-        @Override public void handleTextNode(TextNode node)
-        {
-           
         }
 
         @Override public void head(Node node, int depth)
