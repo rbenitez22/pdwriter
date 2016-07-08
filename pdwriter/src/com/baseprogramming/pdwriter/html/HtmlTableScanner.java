@@ -15,10 +15,25 @@
  */
 package com.baseprogramming.pdwriter.html;
 
+import com.baseprogramming.pdwriter.HtmlPdWriter;
+import com.baseprogramming.pdwriter.PdTableWriter;
+import com.baseprogramming.pdwriter.PdWriter;
+import com.baseprogramming.pdwriter.model.Borders;
+import com.baseprogramming.pdwriter.model.PdColumn;
+import com.baseprogramming.pdwriter.model.PdParagraph;
+import com.baseprogramming.pdwriter.model.PdTable;
+import com.baseprogramming.pdwriter.model.PdTableHeader;
+import com.baseprogramming.pdwriter.units.PdPoints;
+import com.baseprogramming.pdwriter.units.PdUnit;
+import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.NodeVisitor;
@@ -32,23 +47,35 @@ public class HtmlTableScanner implements NodeVisitor
     private boolean scannedHeader=false;
     private boolean firstTrIsHeader=false;
     private boolean scanningBody=false;
-    private final List<String> columnNames = new ArrayList<>();
+    private final List<String> columnNames = new LinkedList<>();
     
     private String tableCaption="";
     private List<String> rowBuffer = new ArrayList<>();
     private final Deque<TagScanner> scanners =new ArrayDeque<>();
-
-    public HtmlTableScanner()
-    {
-    }
+    private final HtmlPdWriter htmlWriter;
+    private PdTable tableModel;
     
+    private String tableNodeId;
+    private PdTableWriter tableWriter;
+
+    public HtmlTableScanner(HtmlPdWriter htmlWriter)
+    {
+        this.htmlWriter=htmlWriter;
+        tableModel = new PdTable(htmlWriter.getWriter().getMeta());
+        tableWriter = new PdTableWriter(htmlWriter.getWriter(),tableModel);
+    }
+      
     @Override
     public void head(Node node,int depth)
     {
         String name=node.nodeName();
         
-        
-        if("caption".equals(name))
+        if("table".equals(name))
+        {
+            loadTableStyles(node);
+            tableNodeId=node.attr("id");
+        }
+        else if("caption".equals(name))
         {
             TagScanner scanner= new CaptionScanner(node, 0);
             scanners.add(scanner);
@@ -57,6 +84,7 @@ public class HtmlTableScanner implements NodeVisitor
         {
             THeadScanner scanner= new THeadScanner(node, 0);
             scanners.add(scanner);
+            columnNames.clear();
         }
         else if("tbody".equals(name) )
         {
@@ -88,7 +116,57 @@ public class HtmlTableScanner implements NodeVisitor
         {
             scanner.tail(node, depth);
         }
+        if("table".equals(name))
+        {
+            finishTable();
+        }
             
+    }
+
+    public void finishTable() throws RuntimeException
+    {
+        PdWriter writer=htmlWriter.getWriter();
+        float y=writer.getLastYPosition() + tableModel.getLineHeight() + tableModel.getRowBorder();
+        writer.setLastYPosition(y);
+        try
+        {
+            if(tableWriter.isDrewRowBorder())
+            {
+                writer.increaseYPosition(tableModel.getSpacingAndPaddingGap());
+            }
+            tableWriter.drawBordersIfPresent(tableWriter.isDrewRowBorder());
+            tableWriter.drawColumnBorders();
+            tableWriter.close();
+        }
+        catch(Exception e)
+        {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+    
+    public void loadTableStyles(Node node)
+    {
+        PdParagraph style=htmlWriter.createNodeStyle(node);
+        if(node.hasAttr("border"))
+        {
+            float border=Float.parseFloat(node.attr("border"));
+            Borders borders  = new Borders(border);
+            tableModel.setBorder(borders);
+            tableModel.setRowBorder(border);
+            tableModel.setColumnBorder(border);
+        }
+        
+        if(node.hasAttr("cellpadding"))
+        {
+            float padding=Float.parseFloat(node.attr("cellpadding"));
+            tableModel.setCellPadding(new PdPoints(padding));
+        }
+        
+        if(node.hasAttr("cellspacing"))
+        {
+            float spacing=Float.parseFloat(node.attr("cellspacing"));
+            tableModel.setCellSpacing(new PdPoints(spacing));
+        }
     }
     
     public List<String> getColumnNames()
@@ -139,6 +217,7 @@ public class HtmlTableScanner implements NodeVisitor
     
     private class THeadScanner extends TagScanner
     {
+        private Map<String,PdParagraph> styleMap= new HashMap<>();
 
         public THeadScanner(Node node, int depth)
         {
@@ -151,9 +230,32 @@ public class HtmlTableScanner implements NodeVisitor
             if ("th".equals(name) || "td".equals(name))
             {
                 CellScanner scanner = new CellScanner(node, depth, true);
-                columnNames.add(scanner.getTextContent());
+                PdTableHeader header= tableModel.getHeader();
+                String id="column-"+header.getColumnCount();
+                String label=scanner.getTextContent();
+                
+                PdParagraph style=htmlWriter.createNodeStyle(node);
+                styleMap.put(id, style);
+                PdUnit width = getBlockWidth(style);
+                PdColumn column= new PdColumn(id,label, width);
+                header.getColumns().add(column);
             }
 
+        }
+
+        private PdUnit getBlockWidth(PdParagraph style)
+        {
+            PdUnit width;
+            if(style instanceof HtmlStyle==false)
+            {
+                width=new PdPoints(0);
+            }
+            else
+            {
+                HtmlStyle tmp=(HtmlStyle)style;
+                width=(tmp.getBlockWidth()==null)?new PdPoints(0):tmp.getBlockWidth();
+            }
+            return width;
         }
 
         @Override public void tail(Node node, int depth)
@@ -161,10 +263,44 @@ public class HtmlTableScanner implements NodeVisitor
             if("thead".equals(node.nodeName()))
             {
                 scannedHeader=true;
-                System.out.printf("Column Headers\n");
-                columnNames.forEach(e->System.out.printf("\t%s\t",e));
-                System.out.println("");
                 scanners.poll();
+                
+                writeCaptionIfPresent();
+                writeTableHeader();
+            }
+        }
+        
+
+        private void writeTableHeader() throws RuntimeException
+        {
+            try
+            {
+                float y=tableWriter.initYPosition();
+                tableModel.calculateMissingColumnWidths();
+                tableWriter.writeColumnHeaders();
+                
+            }
+            catch(Exception e)
+            {
+                throw new RuntimeException(e.getMessage(), e);
+            }
+        }
+
+        private void writeCaptionIfPresent() 
+        {
+            try
+            {
+                if(!(tableCaption==null || tableCaption.trim().isEmpty()))
+                {
+                    PdWriter writer=htmlWriter.getWriter();
+                    writer.write(tableModel, tableCaption);
+                    float y=writer.getLastYPosition() + tableModel.getLineHeight();
+                    writer.setLastYPosition(y);
+                }
+            }
+            catch(Exception e)
+            {
+                throw new RuntimeException(e.getMessage(), e);
             }
         }
 
@@ -228,7 +364,8 @@ public class HtmlTableScanner implements NodeVisitor
     
     private class TrScanner extends TagScanner
     {
-        private StringBuffer data= new StringBuffer();
+        private StringBuffer cellData= new StringBuffer();
+        private final Map<String,Object> rowData= new TreeMap<>();
         
         public TrScanner(Node node, int depth)
         {
@@ -242,17 +379,22 @@ public class HtmlTableScanner implements NodeVisitor
 
         @Override public void head(Node node, int depth)
         {
-             String name = node.nodeName();
-            if ("td".equals(name) || "tr".equals(name))
+            String name = node.nodeName();
+            if("tr".equals(name))
             {
-                data = new StringBuffer();
+                rowData.clear();
+                cellData = new StringBuffer();
+            }
+            else if ("td".equals(name))
+            {
+                cellData = new StringBuffer();
             }
             else if ("#text".equals(name))
             {
                 String string = ((TextNode) node).text();
                 if (!string.trim().isEmpty())
                 {
-                    data.append(string);
+                    cellData.append(string);
                 }
             }
         }
@@ -262,16 +404,64 @@ public class HtmlTableScanner implements NodeVisitor
              String name=node.nodeName();
              if("td".equals(name))
              {
-                 rowBuffer.add(data.toString());
+                 String id="column-"+rowData.size();
+                 rowData.put(id, cellData.toString());
              }
              else if("tr".equals(name))
              {
-                 System.out.printf("Row data\n");
-                 rowBuffer.forEach(e->System.out.printf("\t%s",e));
-                 System.out.println("");
-                 rowBuffer.clear();
+                try 
+                {
+                    tableWriter.writeRow(rowData);
+                }
+                catch(IOException | RuntimeException e)
+                {
+                    throw  new RuntimeException(e.getMessage(), e);
+                }   
              }
         }
+
+//        private PDPageContentStream writeTableRow(PdWriter writer, PDPageContentStream stream) throws RuntimeException
+//        {
+//            try
+//            {
+//                Map<String,List<String>> wrapped=new TreeMap<>();
+//                
+//                int maxRows=tableWriter.wrapRowColumnData(rowData, tableModel, wrapped);
+//                float rowHeight=tableModel.getTextHeight(maxRows);
+//                
+//                if(writer.causesPageOverflow(rowHeight))
+//                {
+//                    float y = writer.getLastYPosition() + tableModel.getLineHeight() + tableModel.getRowBorder();
+//                    writer.setLastYPosition(y);
+//                    stream=tableWriter.handlePageOverflow(tableModel, true);
+//                    drewRowBorder=false;
+//                }
+//                
+//                float maxRowPosition=tableWriter.writeWrappedRow(wrapped);
+//                
+//                float y =tableModel.getNextRowYPosition(maxRowPosition);
+//                writer.setLastYPosition(y);
+//                
+//                if(writer.isAtEndOfPage())
+//                {
+//                    stream=tableWriter.handlePageOverflow(tableModel, drewRowBorder);
+//                    drewRowBorder=true;
+//                }
+//                else if(tableModel.getRowBorder() > 0)
+//                {
+//                    float borderPos=tableModel.getNextBorderPosition(maxRowPosition);
+//                    tableWriter.drawRowBorder(tableModel, borderPos);
+//                    drewRowBorder=true;
+//                }
+//                
+//            }
+//            catch(Exception e)
+//            {
+//                throw new RuntimeException(e.getMessage(), e);
+//            }
+//            
+//            return stream;
+//        }
 
     }
     

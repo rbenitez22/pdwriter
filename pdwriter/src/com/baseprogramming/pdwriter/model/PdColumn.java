@@ -26,10 +26,18 @@ public class PdColumn
     private final String name;
     private final String label;
     private PdUnit width;
+    private PdParagraph style;
 
     public PdColumn(String label, PdUnit width)
     {
         this.name=label;
+        this.label = label;
+        this.width = width;
+    }
+
+    public PdColumn(String name, String label, PdUnit width)
+    {
+        this.name = name;
         this.label = label;
         this.width = width;
     }
@@ -53,4 +61,15 @@ public class PdColumn
     {
         return width;
     }
+
+    public PdParagraph getStyle()
+    {
+        return style;
+    }
+
+    public void setStyle(PdParagraph style)
+    {
+        this.style = style;
+    }
+    
 }

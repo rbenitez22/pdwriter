@@ -37,6 +37,7 @@ public class HtmlStyle extends PdParagraph
     private final float dpi;
     private static Map<String,PDType1Font> fontMap;
     private HtmlStyle parent;
+    private PdUnit blockWidth;
 
     public HtmlStyle(PageMetadata page,Map<String,CSSValue> style,float dpi)
     {
@@ -84,6 +85,7 @@ public class HtmlStyle extends PdParagraph
        setupFont(style); 
        setupBorders(style);
        setupPadding(style);
+       blockWidth=parseDimension(style, "width", new PdPoints(0));
     }
     
     private void setupFont(Map<String,CSSValue> style)
@@ -217,6 +219,26 @@ public class HtmlStyle extends PdParagraph
     public void setParent(HtmlStyle parent)
     {
         this.parent = parent;
+    }
+
+    @Override public float getWidth()
+    {
+        if(blockWidth==null || blockWidth.getPoints() <=0)
+        {
+            return super.getWidth();
+        }
+        
+        return blockWidth.getPoints();
+    }
+    
+    public PdUnit getBlockWidth()
+    {
+        return blockWidth;
+    }
+
+    public void setBlockWidth(PdUnit blockWidth)
+    {
+        this.blockWidth = blockWidth;
     }
     
 }

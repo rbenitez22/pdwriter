@@ -26,6 +26,7 @@ import com.baseprogramming.pdwriter.model.PdTable;
 import com.baseprogramming.pdwriter.model.PdTableHeader;
 import com.baseprogramming.pdwriter.model.ValueProvider;
 import com.baseprogramming.pdwriter.units.PdPoints;
+import com.baseprogramming.pdwriter.units.PdUnit;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -107,6 +108,26 @@ public class PdWriter
     {
         yPosition=position;
     }
+    
+    public void increaseYPosition(PdUnit amount)
+    {
+        increaseYPosition(amount.getPoints());
+    }
+    
+    public void increaseYPosition(float amount)
+    {
+        yPosition+=amount;
+    }
+    
+    public void decreaseYPosition(PdUnit amount)
+    {
+        decreaseYPosition(amount.getPoints());
+    }
+    
+    public void decreaseYPosition(float amount)
+    {
+        yPosition -=amount;
+    }
 
     public PDDocument getDocument()
     {
@@ -133,219 +154,10 @@ public class PdWriter
     
     public void write(PdTable table, List<Map<String,Object>> data) throws IOException
     {
-        yPosition-=table.getAboveSpacing().getPoints();
-        float topBorderPosition=yPosition + table.getHeader().getFontSize();
-        table.setStartYPosition(topBorderPosition);
-        writeColumnHeaders(table);
-        PDPageContentStream stream= createStream();
-        try
-        {
-            stream.setFont(table.getFont(), table.getFontSize());
-            
-            yPosition=table.getNextRowYPosition(yPosition);
-           boolean drewRowBorder=false;
-            for (int i = 0; i < data.size(); i++)
-            {
-                Map<String, Object> rowData = data.get(i);
-                Map<String, List<String>> wrappedRow = new TreeMap<>();
-                int maxRows = wrapRowColumnData(rowData, table, wrappedRow);
-                float rowHeight = table.getTextHeight(maxRows);
-
-                if (causesPageOverflow(rowHeight))
-                {
-                    yPosition+= table.getLineHeight() + table.getRowBorder();
-                    stream = handlePageOverflow(table,true, stream);
-                    drewRowBorder=false;
-                }
-                
-                float maxRowPosition = writeRow(wrappedRow, table, stream);
-                
-                yPosition=table.getNextRowYPosition(maxRowPosition);
-                if (isAtEndOfPage())
-                {
-                    stream = handlePageOverflow(table,false, stream);
-                    drewRowBorder=false;
-                }
-                else if(table.getRowBorder()> 0)
-                {
-                    float borderYPosition = table.getNextBorderPosition(maxRowPosition);
-                    drawRowBorder(table, borderYPosition, stream);
-                    drewRowBorder=true;
-                }
-            }
-            
-            if(drewRowBorder)
-            {
-                yPosition+= table.getLineHeight() + table.getRowBorder();
-            }
-            
-            drawBordersIfPresent(table,drewRowBorder, stream);   
-            drawColumnBorders(table, stream);
-        }
-        finally
-        {
-            if(stream!=null)
-            {
-                stream.close();
-            }
-            yPosition-=table.getBelowSpacing().getPoints();
-        }
+        PdTableWriter writer= new PdTableWriter(this,table);
+        writer.write(data);
     }
 
-    public void drawColumnBorders(PdTable table, PDPageContentStream stream) throws IOException
-    {
-        if(table.getColumnBorder() <=0){return;}
-        float x=table.getLeftX();
-        float y1=table.getStartYPosition();
-        float y2=yPosition - table.getCellPadding().getPoints() + table.getCellPadding().getPoints();
-        for(PdColumn column : table.getHeader().getColumns())
-        {
-            drawVerticalLine(stream, table.getColumnBorder(), x, y1, y2);
-            float width=column.getWidth().getPoints();
-            x=table.getColumnXPosition(x+width);
-        }
-        stream.closeAndStroke();
-    }
-
-    public PDPageContentStream handlePageOverflow(PdTable table,boolean supressBottomBorder, PDPageContentStream stream) throws IOException
-    {
-        drawBordersIfPresent(table,supressBottomBorder, stream);
-        
-        if(table.getColumnBorder() > 0)
-        {
-            drawColumnBorders(table, stream);
-        }
-        
-        stream = createNewPageAndContentStream(stream, table);
-        float tableTopY=table.getUpperY(yPosition);
-        table.setStartYPosition(tableTopY);
-        return stream;
-    }
-
-    public void drawRowBorder(PdTable table, float yRowPosition, PDPageContentStream stream) throws IOException
-    {
-        float x=table.getLeftX();
-        float x2=table.getRightX();
-        drawHorizontalLine(stream, table.getRowBorder(), x, yRowPosition,x2);
-        stream.closeAndStroke();
-    }
-
-    public void drawBordersIfPresent(PdTable table,boolean supressBottomBorder, PDPageContentStream stream) throws IOException
-    {
-        Borders border=table.getBorder();
-        if(border.hasBorders())
-        {
-            float x=table.getLeftX();
-            float x2=table.getRightX();
-            float y=table.getStartYPosition();
-            float y2=yPosition;
-            
-            if(border.getTop() > 0)
-            {
-                drawHorizontalLine(stream, border.getTop(), x, y, x2);
-            }
-            
-            if(border.getRight() > 0)
-            {
-                drawVerticalLine(stream, border.getRight(), x2, y, y2);
-            }
-            
-            if(border.getBottom() > 0 && !supressBottomBorder)
-            {
-                drawHorizontalLine(stream, border.getBottom(), x, y2, x2);
-            }
-            
-            if(border.getLeft() > 0)
-            {
-                drawVerticalLine(stream, border.getLeft(), x, y, y2);
-            }
-            
-            stream.closeAndStroke();
-        }
-    }
-
-    public void writeColumnHeaders(PdTable table) throws IOException
-    {
-        PdTableHeader header=table.getHeader();
-        try(PDPageContentStream stream=createStream())
-        {
-            stream.setFont(header.getFont(), header.getFontSize());
-            float xPosition=table.getColumnXPosition(0);
-            float rowTopY=yPosition;
-            for(PdColumn column : header.getColumns())
-            {
-                String label=column.getLabel();
-                float width=column.getWidth().getPoints();
-                writeText(stream, xPosition, yPosition, label);
-                xPosition=table.getColumnXPosition(xPosition+width);
-            }
-            float borderYPosition= table.getNextBorderPosition(rowTopY);
-            if(table.getRowBorder() > 0)
-            {
-                drawRowBorder(table, borderYPosition, stream);
-            }
-        }
-    }
-
-    public float writeRow(Map<String, List<String>> wrappedRow, PdTable table, PDPageContentStream stream) throws IOException
-    {   
-        PdTableHeader header=table.getHeader();
-       
-        float xPosition=table.getColumnXPosition(0);
-        float maxRowPosition=yPosition;
-        for(int j=0;j<header.getColumnCount();j++)
-        {
-            PdColumn column=header.getColumns().get(j);
-            float width=column.getWidth().getPoints();
-            List<String> content=wrappedRow.get(column.getName());
-            if(!content.isEmpty())
-            {
-                float rowYPosition = writeCellContent(table,content, stream, xPosition);
-                if(rowYPosition < maxRowPosition){maxRowPosition=rowYPosition;}
-            }
-            xPosition=table.getColumnXPosition(xPosition + width);
-        }
-        return maxRowPosition+table.getLineHeight();
-    }
-
-    public int wrapRowColumnData(Map<String, Object> rowData, PdTable table, Map<String, List<String>> wrappedRow) throws IOException
-    {
-        int maxRowCount=1;
-        for(PdColumn column : table.getHeader().getColumns())
-        {
-            Object value=rowData.get(column.getName());
-            List<String> wrapped;
-            if(value==null)
-            {
-                wrapped=Collections.EMPTY_LIST;
-            }
-            else
-            {
-                float width=column.getWidth().getPoints();
-                wrapped=wrapText(table,value.toString(), width);
-            }
-            wrappedRow.put(column.getName(), wrapped);
-            if(wrapped.size() > maxRowCount)
-            {
-                maxRowCount=wrapped.size();
-            }
-        }
-        
-        return maxRowCount;
-    }
-
-    protected float writeCellContent(PdTable table, List<String> cellContent,PDPageContentStream stream, float xPosition) throws IOException
-    {   
-        float rowYPosition=yPosition;
-        for(String line : cellContent)
-        {
-            writeText(stream, xPosition, rowYPosition,line);
-            rowYPosition=table.getNextY(rowYPosition);
-        }
-        
-        return rowYPosition;
-    }
-  
     public boolean causesPageOverflow(float height)
     {
         return ((yPosition - height) < meta.getLowerLeftY());
@@ -371,6 +183,15 @@ public class PdWriter
         return wrapped;
     }
 
+    public void drawVerticalLine(float lineWidth, float x, float y1, float y2) throws IOException
+    {
+        try(PDPageContentStream stream = createStream())
+        {
+            drawVerticalLine(stream, lineWidth, x, y1, y2);
+            stream.stroke();
+        }
+    }
+    
     public void drawVerticalLine(PDPageContentStream stream, float lineWidth, float x, float y1, float y2) throws IOException
     {
         stream.setLineWidth(lineWidth);
@@ -378,6 +199,15 @@ public class PdWriter
         stream.lineTo(x, y2);
     }
 
+    public void drawHorizontalLine(float lineWidth, float x1, float y, float x2) throws IOException
+    {
+        try(PDPageContentStream stream = createStream())
+        {
+            drawHorizontalLine(stream,lineWidth, x1, y, x2);
+            stream.stroke();
+        }
+    }
+    
     public void drawHorizontalLine(PDPageContentStream stream, float lineWidth, float x1, float y, float x2) throws IOException
     {
         stream.setLineWidth(lineWidth);

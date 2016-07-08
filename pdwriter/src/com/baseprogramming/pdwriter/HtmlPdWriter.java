@@ -29,9 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -103,6 +101,11 @@ public class HtmlPdWriter
         });
     }
 
+    public PdWriter getWriter()
+    {
+        return writer;
+    }
+
     public float getDpi()
     {
         return dpi;
@@ -116,7 +119,7 @@ public class HtmlPdWriter
     public void write(String html) throws IOException
     {
         Document document=Jsoup.parse(html);
-        document.traverse(new NodeTextWriter());
+        document.traverse(new NodeTextWriter(this));
     }
     
     public void write(File htmlSourceFile,String rootElement) throws IOException
@@ -124,20 +127,19 @@ public class HtmlPdWriter
         Document document=Jsoup.parse(htmlSourceFile,"UTF-8");
         
         Element root=document.getElementsByTag(rootElement).first();
-        root.traverse(new NodeTextWriter());
+        root.traverse(new NodeTextWriter(this));
     }
     
     public void write(File htmlSourceFile) throws IOException
     {
         Document document=Jsoup.parse(htmlSourceFile,"UTF-8");
-        document.traverse(new NodeTextWriter());
+        document.traverse(new NodeTextWriter(this));
     }
   
-    private PdParagraph createNodeStyle(Node node)
+    public PdParagraph createNodeStyle(Node node)
     {
         String id=node.attr("id");
-        Map<String,CSSValue> map= new HashMap<>();
-        addStyle(node, map);
+        Map<String,CSSValue> map= buildNodeStyleMap(node);
         
         PdParagraph par;
         if(map.isEmpty())
@@ -159,13 +161,16 @@ public class HtmlPdWriter
         return par;  
     }
 
-    private void addStyle(Node node, Map<String, CSSValue> styleMap)
+    public  Map<String, CSSValue> buildNodeStyleMap(Node node)
     {
+        Map<String, CSSValue> styleMap = new HashMap<>();
         addParentStyle(node, styleMap);
         addElementSelectorStyles(node,styleMap);
         addIdSelectorStyles(node,styleMap);
         addClassSelectorStyles(node,styleMap);
         addStyleAttributeCssStyle(node, styleMap);
+        
+        return styleMap;
     }
     
     private void addParentStyle(Node node,Map<String,CSSValue> styleMap)
@@ -178,7 +183,7 @@ public class HtmlPdWriter
         styleMap.putAll(parentStyle);
     }
     
-    private PdParagraph getParentNodeParagraph(Node node)
+    public PdParagraph getParentNodeParagraph(Node node)
     {
         if(node.parent()==null){return null;}
         String parentId=node.parent().attr("id");
@@ -285,10 +290,18 @@ public class HtmlPdWriter
     {
         private boolean writingTable;
         private HtmlTableScanner scanner;
+        private final HtmlPdWriter parent;
+
+        public NodeTextWriter(HtmlPdWriter parent)
+        {
+            this.parent = parent;
+        }
 
         @Override public void head(Node node, int depth)
         {
             String name = node.nodeName();
+            setNodeIdIfMissing(node);
+            
             if(writingTable)
             {
                 scanner.head(node, depth);
@@ -299,15 +312,11 @@ public class HtmlPdWriter
             }
             if(node instanceof Element==false){return;} //do something else?
                                                         //this should not happen
-            setNodeIdIfMissing(node);
+            
             PdParagraph style = createNodeStyle(node);
 
             Element tag=(Element)node;
          
-//            if(writingTable)
-//            {
-//                scanner.head(node, depth);
-//            }
             if("img".equals(name))
             {
                 drawImage(node, style);
@@ -316,8 +325,8 @@ public class HtmlPdWriter
             else if("table".equals(name))
             {
                 writingTable=true;
-                scanner= new HtmlTableScanner();
-                //scanner.scan(node);
+                scanner= new HtmlTableScanner(parent);
+                scanner.loadTableStyles(node);
             }
             else if (tag.isBlock())
             {
@@ -405,7 +414,7 @@ public class HtmlPdWriter
             String id = node.attr("id");
             Element tag=(Element)node;
             PdParagraph par = getNodeStyle(id, node, name);
-            if (tag.isBlock())
+            if (writingTable==false && tag.isBlock())
             {
                 float yPos = writer.getLastYPosition() - (par.getLineHeight() + par.getBelowSpacing().getPoints());
                 writer.setLastYPosition(yPos);

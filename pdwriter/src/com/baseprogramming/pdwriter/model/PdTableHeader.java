@@ -17,6 +17,7 @@ package com.baseprogramming.pdwriter.model;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 
 /**
@@ -82,5 +83,12 @@ public class PdTableHeader
     public float getFontSize()
     {
         return fontSize;
+    }
+    
+    public List<PdColumn> getColumnsWithUnsetWidth()
+    {
+        return columns.stream()
+                .filter(e->e.getWidth()==null || e.getWidth().getPoints() <= 0)
+                .collect(Collectors.toList());
     }
 }

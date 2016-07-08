@@ -15,6 +15,7 @@
  */
 package com.baseprogramming.pdwriter;
 
+import com.baseprogramming.pdwriter.model.Borders;
 import com.baseprogramming.pdwriter.model.PdColumn;
 import com.baseprogramming.pdwriter.model.PdTable;
 import com.baseprogramming.pdwriter.model.PdTableHeader;
@@ -55,15 +56,40 @@ public class PdTableWriter implements AutoCloseable
         return drewRowBorder;
     }
     
+    public void writeColumnHeaders() throws IOException
+    {
+        PdTableHeader header=table.getHeader();
+        createStreamIfNull();
+        float xPosition = table.getColumnXPosition(0);
+        float topY = table.getStartYPosition();
+        float y=topY - (table.getSpacingAndPaddingGap() + table.getLineHeight());
+        for (PdColumn column : header.getColumns())
+        {
+            String label = column.getLabel();
+            float width = column.getWidth().getPoints();
+            writer.writeText(stream, xPosition,y, label);
+            xPosition = table.getColumnXPosition(xPosition + width);
+        }
+        
+        if (table.getRowBorder() > 0)
+        {
+            float borderYPosition = table.getNextBorderPosition(y);
+            drawRowBorder( borderYPosition);
+            y = borderYPosition - (table.getSpacingAndPaddingGap() +table.getLineHeight());
+        }
+        else
+        {
+            y -= (table.getSpacingAndPaddingGap() +table.getLineHeight());
+        }
+        writer.setLastYPosition(y);
+    }
+    
     public void write(List<Map<String,Object>> data) throws IOException
     {
-        float yPosition = initYPosition();
+        initYPosition();
         writeColumnHeaders();
-        createStreamIfNull();
         try
         {   
-           yPosition=table.getNextRowYPosition(yPosition);
-           writer.setLastYPosition(yPosition);
            drewRowBorder=false;
             for (int i = 0; i < data.size(); i++)
             {
@@ -73,10 +99,10 @@ public class PdTableWriter implements AutoCloseable
             
             if(drewRowBorder)
             {
-                writer.increaseYPosition(table.getLineHeight() + table.getRowBorder());
+                writer.increaseYPosition(table.getSpacingAndPaddingGap()+table.getLineHeight() + table.getRowBorder());
             }
             
-            writer.drawBordersIfPresent(table,drewRowBorder);   
+            drawBordersIfPresent(drewRowBorder);   
             drawColumnBorders();
         }
         finally
@@ -107,6 +133,8 @@ public class PdTableWriter implements AutoCloseable
         writer.setLastYPosition(yPosition);
         if (writer.isAtEndOfPage())
         {
+            yPosition+= table.getSpacingAndPaddingGap() + table.getLineHeight() + table.getRowBorder();
+            writer.setLastYPosition(yPosition);
             handlePageOverflow(false);
             drewRowBorder=false;
         }
@@ -120,30 +148,10 @@ public class PdTableWriter implements AutoCloseable
 
     public float initYPosition()
     {
-        float yPosition = writer.getLastYPosition() + table.getAboveSpacing().getPoints();
-        float topBorderPosition=yPosition + table.getHeader().getFontSize();
-        table.setStartYPosition(topBorderPosition);
+        float yPosition = writer.getLastYPosition() - table.getAboveSpacing().getPoints();
+        table.setStartYPosition(yPosition);
+        writer.setLastYPosition(yPosition);
         return yPosition;
-    }
-    
-    public void writeColumnHeaders() throws IOException
-    {
-        PdTableHeader header=table.getHeader();
-        createStreamIfNull();
-        float xPosition = table.getColumnXPosition(0);
-        float rowTopY = writer.getLastYPosition();
-        for (PdColumn column : header.getColumns())
-        {
-            String label = column.getLabel();
-            float width = column.getWidth().getPoints();
-            writer.writeText(stream, xPosition, writer.getLastYPosition(), label);
-            xPosition = table.getColumnXPosition(xPosition + width);
-        }
-        float borderYPosition = table.getNextBorderPosition(rowTopY);
-        if (table.getRowBorder() > 0)
-        {
-            drawRowBorder( borderYPosition);
-        }
     }
     
     public float writeWrappedRow(Map<String, List<String>> wrappedRow) throws IOException
@@ -207,6 +215,39 @@ public class PdTableWriter implements AutoCloseable
         stream.closeAndStroke();
     }
     
+    public void drawBordersIfPresent(boolean supressBottomBorder) throws IOException
+    {
+        Borders border=table.getBorder();
+        if (!border.hasBorders()){return;}
+
+        float x = table.getLeftX();
+        float x2 = table.getRightX();
+        float y = table.getStartYPosition();
+        float y2 = writer.getLastYPosition();
+
+        if (border.getTop() > 0)
+        {
+            writer.drawHorizontalLine(stream, border.getTop(), x, y, x2);
+        }
+
+        if (border.getRight() > 0)
+        {
+            writer.drawVerticalLine(stream, border.getRight(), x2, y, y2);
+        }
+
+        if (border.getBottom() > 0 && !supressBottomBorder)
+        {
+            writer.drawHorizontalLine(stream, border.getBottom(), x, y2, x2);
+        }
+
+        if (border.getLeft() > 0)
+        {
+            writer.drawVerticalLine(stream, border.getLeft(), x, y, y2);
+        }
+
+        stream.stroke();
+    }
+    
     public int wrapRowColumnData(Map<String, Object> rowData, Map<String, List<String>> wrappedRow) throws IOException
     {
         int maxRowCount=1;
@@ -236,7 +277,7 @@ public class PdTableWriter implements AutoCloseable
     public PDPageContentStream handlePageOverflow(boolean supressBottomBorder) throws IOException
     {
         createStreamIfNull();
-        writer.drawBordersIfPresent(table,supressBottomBorder);
+        drawBordersIfPresent(supressBottomBorder);
         
         if(table.getColumnBorder() > 0)
         {
@@ -244,7 +285,7 @@ public class PdTableWriter implements AutoCloseable
         }
         
         stream = writer.createNewPageAndContentStream(stream, table);
-        float tableTopY=table.getUpperY(writer.getLastYPosition())+table.getLineHeight();
+        float tableTopY=table.getUpperY(writer.getLastYPosition()) + table.getLineHeight() + table.getSpacingAndPaddingGap();
         table.setStartYPosition(tableTopY);
         return stream;
     }
@@ -257,6 +298,5 @@ public class PdTableWriter implements AutoCloseable
             stream.close();
         }
     }
-    
-    
+ 
 }

@@ -19,7 +19,7 @@ import com.baseprogramming.pdwriter.units.PdPoints;
 import com.baseprogramming.pdwriter.units.PdUnit;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -62,12 +62,20 @@ public class PdTable extends PdParagraph
 
     public PdTable(PageMetadata page)
     {
-        this(page, Collections.EMPTY_LIST);
+        this(page, new LinkedList<>());
     }
 
     public PdTableHeader getHeader()
     {
         return header;
+    }
+    
+    public void calculateMissingColumnWidths()
+    {
+        List<PdColumn> columns=header.getColumnsWithUnsetWidth();
+        float availableWidth=getWidth() - getContentWidth();
+        PdUnit columnWidth=new PdPoints(availableWidth / columns.size());
+        columns.stream().forEach(e->e.setWidth(columnWidth));
     }
     
     public float getContentWidth()
@@ -86,8 +94,6 @@ public class PdTable extends PdParagraph
     @Override
     public float getUpperY(float offset)
     {
-        float padding=cellPadding.getPoints();
-        float spacing=cellSpacing.getPoints();
         float aboveSpace=getAboveSpacing().getPoints();
         float pos = offset - aboveSpace;
         if(offset < 1)
@@ -135,6 +141,16 @@ public class PdTable extends PdParagraph
         
         return currentPosition - padding - spacing;
     }
+    
+    public float getSpacingAndPaddingGap()
+    {
+        return cellSpacing.getPoints() + cellPadding.getPoints();
+    }
+    
+    public float getRowHeight()
+    {
+        return getLineHeight() + (2*getSpacingAndPaddingGap());
+    }
 
     public PdUnit getCellSpacing()
     {
@@ -175,7 +191,7 @@ public class PdTable extends PdParagraph
     {
         float padding = cellPadding.getPoints();
         float spacing = cellSpacing.getPoints();
-        float pos = getNextY(offset) - rowBorder - spacing - padding ;
+        float pos = getNextY(offset) - rowBorder - ((spacing + padding)*2);
 
         return pos;
     }

@@ -38,7 +38,7 @@ public class PdParagraph
     private PdUnit belowSpacing;
     
     private float lineSpacing=1;
-    
+    private PdUnit blockWidth;
     private PDType1Font font = PDType1Font.TIMES_ROMAN;
     private float fontSize=12;
     private Color fontColor=Color.BLACK;
@@ -245,15 +245,15 @@ public class PdParagraph
     public int getWrapPositionFromOffset(int start,float lineWidth, float xPositionOffet,String string) throws IOException
     {
         int pos=start;
-        float width=0;
+        float stringWidth=0;
         float widthBuffer=fontSize / 4;
         float availableWidth=lineWidth-xPositionOffet;
-        while(width<(availableWidth-widthBuffer) && pos < string.length())
+        while(stringWidth<(availableWidth-widthBuffer) && pos < string.length())
         {
             pos++;
-            width=getStringWidth(string.substring(start, pos));
+            stringWidth=getStringWidth(string.substring(start, pos));
         }
-        if(pos > start && width >=(availableWidth-widthBuffer))
+        if(pos > start && stringWidth >=(availableWidth-widthBuffer))
         {
             //get position of previous space (start of last word)
             int tmp=string.lastIndexOf(' ', pos); 
