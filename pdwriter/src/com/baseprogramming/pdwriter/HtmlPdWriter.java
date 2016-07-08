@@ -339,15 +339,17 @@ public class HtmlPdWriter
             {
                 PdList pdList=PdList.numeredList(writer.getMeta());
                 listScanner = new HtmlListScanner(parent, pdList);
+                style.copyTo(pdList);
                 writingList=true;
             }
             else if("ul".equals(name))
             {
                 PdList pdList=PdList.bulletList(writer.getMeta());
                 listScanner = new HtmlListScanner(parent, pdList);
+                style.copyTo(pdList);
                 writingList=true;
             }
-            else if (tag.isBlock())
+            else if (tag.isBlock() && writingList==false)
             {
                 float yPos = style.getUpperY(writer.getLastYPosition());
                 writer.setLastYPosition(yPos);
@@ -422,7 +424,7 @@ public class HtmlPdWriter
                 writingList=false;
             }
             
-            if("#text".equals(name)==false)
+            if("#text".equals(name)==false && writingList==false)
             {
                 handleEndOfBlock(node, name);
                 nodeParagraphMaps.remove(id);
@@ -430,6 +432,7 @@ public class HtmlPdWriter
             }
  
         }
+    
 
         private void handleEndOfBlock(Node node, String name) throws IllegalStateException
         {
@@ -439,9 +442,9 @@ public class HtmlPdWriter
                 throw new IllegalStateException(string);
             }
             
-            String id = node.attr("id");
+            
             Element tag=(Element)node;
-            PdParagraph par = getNodeStyle(id, node, name);
+            PdParagraph par = getNodeStyle(node, name);
             if (writingTable==false && tag.isBlock())
             {
                 float yPos = writer.getLastYPosition() - (par.getLineHeight() + par.getBelowSpacing().getPoints());
@@ -458,107 +461,110 @@ public class HtmlPdWriter
                 }
             }
         }
-
-        private PdParagraph getNodeStyle(String id, Node node, String name) throws IllegalStateException
+    }
+    protected PdParagraph getNodeStyle(Node node, String name) throws IllegalStateException
+    {
+        String id = node.attr("id");
+        PdParagraph par = nodeParagraphMaps.get(id);
+        if (par == null)
         {
-            PdParagraph par = nodeParagraphMaps.get(id);
-            if (par == null)
-            {
-                String parentId = node.parent().attr("id");
-                par = nodeParagraphMaps.get(parentId);
-            }
-            if (par == null)
-            {
-                String string = String.format("Found tail of block-level node '%s(Id=%s)', but no paragraph style has been set.", name, id);
-                throw new IllegalStateException(string);
-            }
-            return par;
+            String parentId = node.parent().attr("id");
+            par = nodeParagraphMaps.get(parentId);
+        }
+        if (par == null)
+        {
+            String string = String.format("Found tail of block-level node '%s(Id=%s)', but no paragraph style has been set.", name, id);
+            throw new IllegalStateException(string);
+        }
+        return par;
+    }
+
+    protected void writeText(TextNode node)
+    {
+        String text = node.text();
+        if (text != null)
+        {
+            text = text.trim();
         }
 
-        private void writeText(TextNode node)
+        if (text == null || text.isEmpty())
         {
-            String text = node.text();
-            if (text != null)
-            {
-                text = text.trim();
-            }
-
-            if (text == null || text.isEmpty())
-            {
-                return;
-            }
-
-            PdParagraph style = getParentNodeParagraph(node);
-            if (style == null)
-            {
-                style = new PdParagraph(writer.getMeta());
-            }
-            try
-            {
-                writeText(style, text);
-            }
-            catch (IOException e)
-            {
-                throw new RuntimeException(e.getMessage(), e);
-            }
+            return;
         }
 
-        private void writeText(PdParagraph style, String content) throws IOException
+        PdParagraph style = getParentNodeParagraph(node);
+        if (style == null)
         {
-            if (writer.isAtEndOfPage())
+            style = new PdParagraph(writer.getMeta());
+        }
+        try
+        {
+            writeText(style, text);
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    protected void writeText(PdParagraph style, String content) throws IOException
+    {
+        if (writer.isAtEndOfPage())
+        {
+            writer.createNewPage();
+            xPosition = style.getLeftX();
+        }
+
+        PDPageContentStream stream = writer.createStream();
+        try
+        {
+            stream.setFont(style.getFont(), style.getFontSize());
+            stream.setNonStrokingColor(style.getFontColor());
+            float yPosition = writer.getLastYPosition();
+            int lastPos = 0;
+            boolean firstLine = true;
+
+            while (true)
             {
-                writer.createNewPage();
+                int start = lastPos;
+                int end = content.indexOf("\n", start);
+                if (end < 0)
+                {
+                    end = style.getWrapPositionFromOffset(start, xPosition, content);
+                }
+
+                String string = content.substring(start, end);
+                writer.writeText(stream, xPosition, yPosition, string);
+
+                firstLine = false;
+                lastPos = end;
+                updateXPosition(style, string);
+                if (end >= content.length())
+                {
+                    break;
+                }
+
+                yPosition = style.getNextY(yPosition);
                 xPosition = style.getLeftX();
-            }
-
-            PDPageContentStream stream = writer.createStream();
-            try
-            {
-                stream.setFont(style.getFont(), style.getFontSize());
-                stream.setNonStrokingColor(style.getFontColor());
-                float yPosition = writer.getLastYPosition();
-                int lastPos = 0;
-                boolean firstLine = true;
-
-                while (true)
-                {
-                    int start = lastPos;
-                    int end=content.indexOf("\n", start);
-                    if(end < 0){end= style.getWrapPositionFromOffset(start, xPosition, content);}
-
-                    String string = content.substring(start, end);
-                    writer.writeText(stream, xPosition, yPosition, string);
-
-                    firstLine = false;
-                    lastPos = end;
-                    updateXPosition(style, string);
-                    if (end >= content.length())
-                    {
-                        break;
-                    }
-
-                    yPosition = style.getNextY(yPosition);
-                    xPosition = style.getLeftX();
-                    writer.setLastYPosition(yPosition);
-                    if (writer.isAtEndOfPage())
-                    {
-                        stream = writer.createNewPageAndContentStream(stream, style);
-                        yPosition=writer.getLastYPosition();
-                        xPosition = style.getLeftX();
-                    }
-                }
                 writer.setLastYPosition(yPosition);
-            }
-            finally
-            {
-                if (stream != null)
+                if (writer.isAtEndOfPage())
                 {
-                    stream.close();
+                    stream = writer.createNewPageAndContentStream(stream, style);
+                    yPosition = writer.getLastYPosition();
+                    xPosition = style.getLeftX();
                 }
+            }
+            writer.setLastYPosition(yPosition);
+        }
+        finally
+        {
+            if (stream != null)
+            {
+                stream.close();
             }
         }
     }
-    
+
     protected void updateXPosition(PdParagraph style, String string) throws IOException
     {
         float stringWidth = style.getStringWidth(string);
@@ -567,5 +573,10 @@ public class HtmlPdWriter
         {
             xPosition = style.getLeftX();
         }
+    }
+    
+    protected void setXPosition(float position)
+    {
+        xPosition=position;
     }
 }
