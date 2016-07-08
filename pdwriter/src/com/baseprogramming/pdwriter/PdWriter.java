@@ -259,6 +259,7 @@ public class PdWriter
         try
         {
             stream.setFont(paragraph.getFont(), paragraph.getFontSize());
+            stream.setNonStrokingColor(paragraph.getFontColor());
             yPosition=paragraph.getUpperY(yPosition);
             int lastPos=0;
             boolean firstLine=true;
