@@ -397,50 +397,6 @@ public class HtmlTableScanner implements NodeVisitor
                 }   
              }
         }
-
-//        private PDPageContentStream writeTableRow(PdWriter writer, PDPageContentStream stream) throws RuntimeException
-//        {
-//            try
-//            {
-//                Map<String,List<String>> wrapped=new TreeMap<>();
-//                
-//                int maxRows=tableWriter.wrapRowColumnData(rowData, tableModel, wrapped);
-//                float rowHeight=tableModel.getTextHeight(maxRows);
-//                
-//                if(writer.causesPageOverflow(rowHeight))
-//                {
-//                    float y = writer.getLastYPosition() + tableModel.getLineHeight() + tableModel.getRowBorder();
-//                    writer.setLastYPosition(y);
-//                    stream=tableWriter.handlePageOverflow(tableModel, true);
-//                    drewRowBorder=false;
-//                }
-//                
-//                float maxRowPosition=tableWriter.writeWrappedRow(wrapped);
-//                
-//                float y =tableModel.getNextRowYPosition(maxRowPosition);
-//                writer.setLastYPosition(y);
-//                
-//                if(writer.isAtEndOfPage())
-//                {
-//                    stream=tableWriter.handlePageOverflow(tableModel, drewRowBorder);
-//                    drewRowBorder=true;
-//                }
-//                else if(tableModel.getRowBorder() > 0)
-//                {
-//                    float borderPos=tableModel.getNextBorderPosition(maxRowPosition);
-//                    tableWriter.drawRowBorder(tableModel, borderPos);
-//                    drewRowBorder=true;
-//                }
-//                
-//            }
-//            catch(Exception e)
-//            {
-//                throw new RuntimeException(e.getMessage(), e);
-//            }
-//            
-//            return stream;
-//        }
-
     }
     
     
