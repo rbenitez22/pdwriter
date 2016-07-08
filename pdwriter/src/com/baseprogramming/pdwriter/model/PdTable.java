@@ -212,6 +212,11 @@ public class PdTable extends PdParagraph
         float spacing = getCellSpacing().getPoints();
         return offset + columnBorder + padding + spacing;
     }
+    
+    public float getFirstColumnXPosition()
+    {
+        return getLeftX() + getColumnXPosition(0);
+    }
 
     public final PdTableHeader createTableHeader(String... names)
     {
