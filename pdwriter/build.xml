@@ -81,7 +81,6 @@
     </target>
     
     <target name="setup">
-        <delete dir="${version.dir}"/>
         <buildnumber/>
         <property name="root.name" value="${version.dir}/${deliverable.name}-${version}.${build.number}"/>
     </target>
