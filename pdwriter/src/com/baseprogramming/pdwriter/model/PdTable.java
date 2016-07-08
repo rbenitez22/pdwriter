@@ -147,6 +147,11 @@ public class PdTable extends PdParagraph
         return cellSpacing.getPoints() + cellPadding.getPoints();
     }
     
+    public float getTextBaseToTopBorderDistance()
+    {
+        return getLineHeight() + getSpacingAndPaddingGap();
+    }
+    
     public float getRowHeight()
     {
         return getLineHeight() + (2*getSpacingAndPaddingGap());
