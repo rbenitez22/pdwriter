@@ -16,14 +16,12 @@
 package com.baseprogramming.pdwriter;
 
 
-import com.baseprogramming.pdwriter.model.Borders;
 import com.baseprogramming.pdwriter.model.Margin;
 import com.baseprogramming.pdwriter.model.PageMetadata;
 import com.baseprogramming.pdwriter.model.PdColumn;
 import com.baseprogramming.pdwriter.model.PdList;
 import com.baseprogramming.pdwriter.model.PdParagraph;
 import com.baseprogramming.pdwriter.model.PdTable;
-import com.baseprogramming.pdwriter.model.PdTableHeader;
 import com.baseprogramming.pdwriter.model.ValueProvider;
 import com.baseprogramming.pdwriter.units.PdPoints;
 import com.baseprogramming.pdwriter.units.PdUnit;
@@ -33,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
