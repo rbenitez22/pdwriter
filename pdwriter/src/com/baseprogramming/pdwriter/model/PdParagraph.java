@@ -272,4 +272,19 @@ public class PdParagraph
     {
         return (font.getStringWidth(string) / 1000 * fontSize);
     }
+    
+    public void copyTo(PdParagraph target)
+    {
+        target.setAboveSpacing(getAboveSpacing());
+        target.setBelowSpacing(getBelowSpacing());
+        target.setBeforeTextIndent(getBeforeTextIndent());
+        target.setAfterTextIndent(getAfterTextIndent());
+        target.setFont(getFont());
+        target.setFontSize(getFontSize());
+        target.setFontColor(getFontColor());
+        target.setLineSpacing(getLineSpacing());
+        target.setBorder(getBorder());
+        
+        
+    }
 }
