@@ -72,7 +72,7 @@ public class PdTable extends PdParagraph
     
     public void calculateMissingColumnWidths()
     {
-        List<PdColumn> columns=header.getColumnsWithUnsetWidth();
+        List<PdColumn> columns=header.getColumnsWithUnsetWidth();        
         float availableWidth=getWidth() - getContentWidth();
         PdUnit columnWidth=new PdPoints(availableWidth / columns.size());
         columns.stream().forEach(e->e.setWidth(columnWidth));
@@ -205,7 +205,7 @@ public class PdTable extends PdParagraph
     {
         float padding = getCellPadding().getPoints();
         float spacing = getCellSpacing().getPoints();
-        return offset + getLeftX() + columnBorder + padding + spacing;
+        return offset + columnBorder + padding + spacing;
     }
 
     public final PdTableHeader createTableHeader(String... names)
