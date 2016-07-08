@@ -58,12 +58,20 @@ public class PdList extends PdParagraph
         return labelBodyDelimiter;
     }
     
+    public String createFullItemString(String itemText)
+    {
+        return String.format("%s%s%s",itemLabel.getValue(),labelBodyDelimiter,itemText);
+    }
+    
     public PdParagraph createItemStyle()
     {
         PdParagraph par= new PdParagraph(getPage());
         par.setAboveSpacing(new PdInch(0));
         par.setBelowSpacing(new PdInch(0));
         par.setAfterTextIndent(getAfterTextIndent());
+        par.setFont(getFont());
+        par.setFontSize(getFontSize());
+        par.setFontColor(getFontColor());
         
         return par;
     }
