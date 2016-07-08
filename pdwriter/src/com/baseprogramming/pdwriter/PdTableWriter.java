@@ -118,23 +118,23 @@ public class PdTableWriter implements AutoCloseable
     public void writeRow(Map<String, Object> rowData) throws IOException
     {
         drewRowBorder=false;
-        float yPosition=writer.getLastYPosition();
+
         Map<String, List<String>> wrappedRow = new TreeMap<>();
         int maxRows = wrapRowColumnData(rowData, wrappedRow);
-        float rowHeight = table.getTextHeight(maxRows);
-        if (writer.causesPageOverflow(rowHeight))
+        float textHeight = table.getTextHeight(maxRows);
+        if (writer.causesPageOverflow(textHeight))
         {
-            yPosition+= table.getLineHeight() + table.getRowBorder();
+            writer.increaseYPosition(table.getRowHeight());
             handlePageOverflow(true);
             drewRowBorder=false;
         }
+        
         float maxRowPosition = writeWrappedRow(wrappedRow);
-        yPosition=table.getNextRowYPosition(maxRowPosition);
+        float yPosition=table.getNextRowYPosition(maxRowPosition);
         writer.setLastYPosition(yPosition);
         if (writer.isAtEndOfPage())
         {
-            yPosition+= table.getSpacingAndPaddingGap() + table.getLineHeight() + table.getRowBorder();
-            writer.setLastYPosition(yPosition);
+            writer.increaseYPosition(table.getRowHeight());
             handlePageOverflow(false);
             drewRowBorder=false;
         }
