@@ -60,7 +60,7 @@ public class PdTableWriter implements AutoCloseable
     {
         PdTableHeader header=table.getHeader();
         createStreamIfNull();
-        float xPosition = table.getLeftX();
+        float xPosition = table.getFirstColumnXPosition();
         float topY = table.getStartYPosition();
         float y=topY - (table.getSpacingAndPaddingGap() + table.getLineHeight());
         for (PdColumn column : header.getColumns())
@@ -159,7 +159,7 @@ public class PdTableWriter implements AutoCloseable
         createStreamIfNull();
         PdTableHeader header=table.getHeader();
         
-        float xPosition=table.getLeftX();
+        float xPosition=table.getFirstColumnXPosition();
         float maxRowPosition=writer.getLastYPosition();
         for(int j=0;j<header.getColumnCount();j++)
         {
