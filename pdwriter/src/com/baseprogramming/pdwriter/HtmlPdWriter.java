@@ -17,6 +17,7 @@ package com.baseprogramming.pdwriter;
 
 import com.baseprogramming.pdwriter.html.HtmlStyle;
 import com.baseprogramming.pdwriter.html.HtmlTableScanner;
+import com.baseprogramming.pdwriter.model.PdList;
 import com.baseprogramming.pdwriter.model.PdParagraph;
 import com.steadystate.css.parser.CSSOMParser;
 import com.steadystate.css.parser.SACParserCSS3;
@@ -289,8 +290,10 @@ public class HtmlPdWriter
     private class NodeTextWriter implements NodeVisitor
     {
         private boolean writingTable;
-        private HtmlTableScanner scanner;
+        private HtmlTableScanner tableScanner;
         private final HtmlPdWriter parent;
+        private HtmlListScanner listScanner;
+        private boolean writingList=false;
 
         public NodeTextWriter(HtmlPdWriter parent)
         {
@@ -304,7 +307,11 @@ public class HtmlPdWriter
             
             if(writingTable)
             {
-                scanner.head(node, depth);
+                tableScanner.head(node, depth);
+            }
+            else if(writingList)
+            {
+                listScanner.head(node, depth);
             }
             if ("#text".equals(name))
             {
@@ -325,8 +332,20 @@ public class HtmlPdWriter
             else if("table".equals(name))
             {
                 writingTable=true;
-                scanner= new HtmlTableScanner(parent);
-                scanner.loadTableStyles(node);
+                tableScanner= new HtmlTableScanner(parent);
+                tableScanner.loadTableStyles(node);
+            }
+            else if("ol".equals(name))
+            {
+                PdList pdList=PdList.numeredList(writer.getMeta());
+                listScanner = new HtmlListScanner(parent, pdList);
+                writingList=true;
+            }
+            else if("ul".equals(name))
+            {
+                PdList pdList=PdList.bulletList(writer.getMeta());
+                listScanner = new HtmlListScanner(parent, pdList);
+                writingList=true;
             }
             else if (tag.isBlock())
             {
@@ -378,7 +397,7 @@ public class HtmlPdWriter
         {
             String name = node.nodeName();
             String id = node.attr("id");
-            if ("#text".equals(name) && !writingTable)
+            if ("#text".equals(name) && !(writingTable || writingList))
             {
                 writeText((TextNode) node);
                 return;
@@ -386,7 +405,11 @@ public class HtmlPdWriter
             
             if(writingTable)
             {
-                scanner.tail(node, depth);
+                tableScanner.tail(node, depth);
+            }
+            else if(writingList)
+            {
+                listScanner.tail(node, depth);
             }
             
             if ("table".equals(name))
@@ -394,6 +417,11 @@ public class HtmlPdWriter
                 writingTable = false;
                 
             }
+            else if ("ol".equals(name) || "ul".equals(name))
+            {
+                writingList=false;
+            }
+            
             if("#text".equals(name)==false)
             {
                 handleEndOfBlock(node, name);
@@ -529,16 +557,15 @@ public class HtmlPdWriter
                 }
             }
         }
-
-        private void updateXPosition(PdParagraph style, String string) throws IOException
-        {
-            float stringWidth = style.getStringWidth(string);
-            xPosition += stringWidth + style.getStringWidth(" ");
-            if (xPosition >= style.getRightX())
-            {
-                xPosition = style.getLeftX();
-            }
-        }
+    }
     
+    protected void updateXPosition(PdParagraph style, String string) throws IOException
+    {
+        float stringWidth = style.getStringWidth(string);
+        xPosition += stringWidth + style.getStringWidth(" ");
+        if (xPosition >= style.getRightX())
+        {
+            xPosition = style.getLeftX();
+        }
     }
 }
