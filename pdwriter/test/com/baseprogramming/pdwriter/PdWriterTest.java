@@ -20,6 +20,7 @@ import com.baseprogramming.pdwriter.model.Borders;
 import com.baseprogramming.pdwriter.model.Margin;
 import com.baseprogramming.pdwriter.model.PageMetadata;
 import com.baseprogramming.pdwriter.model.PdColumn;
+import com.baseprogramming.pdwriter.model.PdList;
 import com.baseprogramming.pdwriter.model.PdParagraph;
 import com.baseprogramming.pdwriter.model.PdTable;
 import com.baseprogramming.pdwriter.model.PdTableHeader;
@@ -215,7 +216,7 @@ public class PdWriterTest
             code.setBelowSpacing(new PdInch(0.3f));
             
             writer.write(heading, "PdWriter Class");
-            writer.write(body,"The PdWriter class (com.baseprogramming.pdwriterPdWriter) is a class that demonstrates how to use the Apache project PDFBox.  More so, it demonstrates how it can be extended to provide a more user-friendly interface to write content to PDF--without having to worry about breaking up a large chunk of text such that it fits in a page.");
+            writer.write(body,"The PdWriter class (com.baseprogramming.pdwriter.PdWriter) is a class that demonstrates how to use the Apache project PDFBox.  More so, it demonstrates how PDFBox can be extended to provide a more user-friendly interface to write content to PDF--without having to worry about breaking up a large chunk of text such that it fits in a page.");
             
             writer.write(body,"This class attempts to emulate a basic word processor approach, where text is written in paragraphs(PdParagraph class), and each paragraph has settings such as font and spacing.");
             writer.write(body,"The PdWriter class has two constructors");
@@ -248,10 +249,36 @@ public class PdWriterTest
                                 "code.setAboveSpacing(new PdInch(0.3f));\n" +
                                 "code.setBelowSpacing(new PdInch(0.3f));");
             
-            writer.write(body,"Write text (paragraphs, by calling the method PdWriter.write(PdParagraph,String).  Note that where is a write(String) method, that creates its own PdParagraph instance with the default values.");
+            writer.write(body,"Write text (paragraphs, by calling the method PdWriter.write(PdParagraph,String):");
+            writer.write(code,"writer.write(body,\"Write text (paragraphs, by calling the method PdWriter.write(PdParagraph,String):\");");
+            writer.write(body,"Note that where is a write(String) method, that creates its own PdParagraph instance with the default values.");  
+            
+            PdList list= PdList.numeredList(writer.getMeta());
+            
+            writer.write(body,"It is also possible to write a numbered or bullet list--use the class PdList, which extends PdParagraph.  Use the factory method numberedList(PageMetadata) to create a numbered list paragraph style:");
+            writer.write(code,"PdList list= PdList.numeredList(writer.getMeta());");
+            
+            writer.write(body,"Or");
+            
+            writer.write(code,"PdList list= PdList.bulletList(writer.getMeta());");
+            
+            writer.write(body,"to create a bullet list.  The line of code:");
+            
+            writer.write(code,"writer.write(list, \"Java\",\"C++\",\"Python\");");
+            
+            writer.write(body,"generates the following numbered list:");
+            writer.write(list, "Java","C++","Python");
+            
+            writer.write(body,"A List of String can also be passed");
+            
+            list=PdList.bulletList(writer.getMeta());
+            writer.write(body, "To create a bullet list, simple use the other factory method:");
+            writer.write(code,"list=PdList.bulletList(writer.getMeta());");
+            writer.write(body,"and call the PdWriter write(PdList,...) method as with the numbered list:");
+            writer.write(list, "Java","C++","Python");
             
             
-            pdDoc.save(new File("c:/tmp/basic-demo.pdf"));
+            pdDoc.save(new File("c:/tmp/PdWriter-Demo.pdf"));
         }
         catch (Exception e)
         {
