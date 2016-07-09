@@ -3,7 +3,7 @@
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * You may obtain a copyTo of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -25,7 +25,13 @@ import com.baseprogramming.pdwriter.model.PdTable;
 import com.baseprogramming.pdwriter.model.PdTableHeader;
 import com.baseprogramming.pdwriter.units.PdInch;
 import com.baseprogramming.pdwriter.units.PdPoints;
+import com.baseprogramming.pdwriter.units.PdUnit;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -85,6 +91,48 @@ public class PdWriterTest
          
          return table;
      }
+     
+     private void printHtmlTableWidthRandomData(int rows)
+     {
+          List<Map<String,Object>> data=getDataTable(50);
+          
+          StringBuilder html= new StringBuilder();
+          
+          html.append("<table border=\"1\" cellpadding=\"1\" cellspacing=\"0\">\n");
+          html.append("\t<caption>Sample Table</caption>\n");
+          html.append("\t\t<thead>\n");
+          
+          for(String name : data.get(0).keySet())
+          {
+              String string=String.format("\t\t\t<th>%s</th>\n",name);
+              html.append(string);
+          }
+          
+          html.append("\t\t</thead>\n");
+          
+          html.append("\t\t<tbody>\n");
+          String rowTemplate="\t\t\t<td>%s</td>\n";
+          
+          for(Map<String,Object> row : data)
+          {
+              html.append("\t\t<tr>\n");
+              row.entrySet().stream().map(e->String.format(rowTemplate,e.getValue())).forEach(e->html.append(e));
+              html.append("\t\t</tr>\n");
+          }
+          
+          html.append("\t</tbody>\n");
+          
+          
+          html.append("</table>\n");
+          System.out.println(html.toString());
+          
+          
+     }
+     
+     @Test public void testGenerateHtmlTable()
+     {
+         printHtmlTableWidthRandomData(50);
+     }
     
     @Test public void testWriteTable()
     {
@@ -125,9 +173,9 @@ public class PdWriterTest
     @Test
     public void testHtmlWriter()
     {
-        File input = new File("c:/tmp/html-input-table-with-thead.html");
+        File input = new File("c:/tmp/html-input.html");
         
-        File output= new File("c:/tmp/html-input-table-with-thead.pdf");
+        File output= new File("c:/tmp/html-input.pdf");
         Margin margin= new Margin(0.75f, 0.2f, 0.5f, 0.5f);
         try(PDDocument pdDoc = new PDDocument())
         {
@@ -143,33 +191,125 @@ public class PdWriterTest
         
     }
     
-    @Test public void testTextPosition()
+    @Test public void testBasicDemo()
     {
-        File ouptut= new File("c:/tmp/position-tests.pdf");
-        
-        try(PDDocument doc= new PDDocument())
+        try(PDDocument pdDoc = new PDDocument())
         {
-            Margin margin= new Margin(0.75f, 0.2f, 0.5f, 0.5f);
-            PdWriter writer= new PdWriter(doc, margin);
-            PdParagraph par=writer.createParagraph();
-            float y=writer.getLastYPosition();
-            float fontHeight=par.getFont().getBoundingBox().getHeight()/1000;
-            String string=String.format("Y Position: %s, Font Size: %s, Line Height: %s, Font BB Height: %s",y,par.getFontSize(),par.getLineHeight(),fontHeight);
-            writer.write(par,string);
+            Margin margin= new Margin(0.75f, 0.2f, 0.5f, 0.25f);
+            PdWriter writer= new PdWriter(pdDoc, margin);
             
-            PageMetadata meta=writer.getMeta();
-            float x1=meta.getLowerLeftX();
-            float x2=meta.getUpperRightX();
-            float y1=y+par.getLineHeight();
-            writer.drawHorizontalLine(1, x1, y1, x2);
-            writer.drawHorizontalLine(1, x1, y, x2);
+            PdParagraph heading=writer.createParagraph();
+            heading.setFont(PDType1Font.TIMES_BOLD);
+            heading.setFontSize(24);
+            heading.setAboveSpacing(new PdInch(0.75f));
+            heading.setBelowSpacing(new PdInch(0.75f));
             
-            doc.save(ouptut);
+            PdParagraph body = writer.createParagraph();
+            body.setFirstLineIndent(new PdInch(0.3f));
+            body.setBelowSpacing(new PdInch(0.17f));
+            
+            PdParagraph code=writer.createParagraph();
+            code.setFont(PDType1Font.COURIER);
+            code.setBeforeTextIndent(new PdInch(0.5f));
+            code.setAboveSpacing(new PdInch(0.3f));
+            code.setBelowSpacing(new PdInch(0.3f));
+            
+            writer.write(heading, "PdWriter Class");
+            writer.write(body,"The PdWriter class (com.baseprogramming.pdwriterPdWriter) is a class that demonstrates how to use the Apache project PDFBox.  More so, it demonstrates how it can be extended to provide a more user-friendly interface to write content to PDF--without having to worry about breaking up a large chunk of text such that it fits in a page.");
+            
+            writer.write(body,"This class attempts to emulate a basic word processor approach, where text is written in paragraphs(PdParagraph class), and each paragraph has settings such as font and spacing.");
+            writer.write(body,"The PdWriter class has two constructors");
+            writer.write(code,"public PdWriter(PDDocument document, Margin margin)");
+            writer.write(body,"And");
+            writer.write(code," public PdWriter(PageMetadata meta, PDDocument document)");
+            
+            writer.write(body, "The Margin class stores margin information (Top, Left, Bottom, and Right).  The margins are stored as a PdUnit. The concept of a PdUnit (as with all other code in this project) is an experimental concept; its goal is to provide a client with a wide range of options for units of measures.  Currently, the available units of measure are: PdInch, PdMillimeters,PdPica, PdPixels, and Points.  All units of measure convert the given value to points--the standard unit of measure in graphic systems;  the PdPoints class merely echos the value given.");
+            
+            writer.write(body,"The PageMetadata class has basic page information(Margin and PDRectangle), and has methods to compute page boundaries.  The default PDRectangle is PDRectangle.LETTER");
+            
+            writer.write(body,"To get started with the PdWriter class, create create an instance:");
+            writer.write(code,"Margin margin= new Margin(0.75f, 0.2f, 0.5f, 0.25f);\n" +
+                                "PdWriter writer= new PdWriter(pdDoc, margin);");
+            
+            writer.write(body,"Then create one (or more) PdParagraph objects:");
+            writer.write(code,"PdParagraph heading=writer.createParagraph();\n" +
+                                "heading.setFont(PDType1Font.TIMES_BOLD);\n" +
+                                "heading.setFontSize(24);\n" +
+                                "heading.setAboveSpacing(new PdInch(0.75f));\n" +
+                                "heading.setBelowSpacing(new PdInch(0.75f));\n" +
+                                "\n" +
+                                "PdParagraph body = writer.createParagraph();\n" +
+                                "body.setFirstLineIndent(new PdInch(0.3f));\n" +
+                                "body.setBelowSpacing(new PdInch(0.17f));\n" +
+                                "\n" +
+                                "PdParagraph code=writer.createParagraph();\n" +
+                                "code.setFont(PDType1Font.COURIER);\n" +
+                                "code.setBeforeTextIndent(new PdInch(0.5f));\n" +
+                                "code.setAboveSpacing(new PdInch(0.3f));\n" +
+                                "code.setBelowSpacing(new PdInch(0.3f));");
+            
+            writer.write(body,"Write text (paragraphs, by calling the method PdWriter.write(PdParagraph,String).  Note that where is a write(String) method, that creates its own PdParagraph instance with the default values.");
+            
+            
+            pdDoc.save(new File("c:/tmp/basic-demo.pdf"));
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             e.printStackTrace();
         }
     }
     
+    @Test public void testTextFileToPdf()
+    {
+        String fileName="sample-text-file";
+        String path = "c:/tmp/" + fileName + ".txt";
+        File output= new File("c:/tmp/" + fileName +".pdf");
+        
+        Margin margin= new Margin(0.75f, 0.2f, 0.5f, 0.25f);
+        try(PDDocument pdDoc = new PDDocument())
+        {
+            int parSize=30;
+            int parCount=100;
+            
+            generateTextFile(new File(path), 30, 100);
+            PdWriter writer= new PdWriter(pdDoc, margin);
+            
+            String string=String.format("This is a PDF file created from a randomly generated text file.  The text file has %s paragraph(s), each with %s randomly genrated words.  This example demonstrates how text is wrapped when the margin is reached (you will not from the text file that each paragraph appears as a single line of text), as well a new page started when the end of the page is reached. ", parCount,parSize);
+            
+            PdParagraph intro= writer.createParagraph();
+            intro.setFont(PDType1Font.COURIER_OBLIQUE);
+            intro.setAboveSpacing(new PdInch(0.17f));
+            intro.setBelowSpacing(new PdInch(0.5f));
+            
+            writer.write(intro, string);
+            
+            PdParagraph par=writer.createParagraph();
+            
+            for(String line : Files.readAllLines(Paths.get(path)))
+            {
+                writer.write(par, line);
+            }
+
+            pdDoc.save(output);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+    
+    private void generateTextFile(File output, int paragraphSize, int paragraphCount) throws IOException
+    {
+        try(BufferedWriter writer= new BufferedWriter(new FileWriter(output)))
+        {
+            for(int i=0;i<paragraphCount;i++)
+            {
+                String line=DataFactory.genWords(paragraphSize);
+                writer.write(line);
+                writer.newLine();
+                writer.newLine();
+            }
+        }
+        
+    }
 }
