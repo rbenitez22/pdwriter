@@ -28,6 +28,7 @@ import com.baseprogramming.pdwriter.units.PdUnit;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -212,6 +213,11 @@ public class PdWriter
         stream.lineTo(x2, y);
     }
 
+    public void write(PdList list,String ...items) throws IOException
+    {
+        write(list,Arrays.asList(items));
+    }
+    
     public void write(PdList list, List<String> content) throws IOException
     {
         ValueProvider prov=list.getItemLabel();
