@@ -263,17 +263,22 @@ public class PdWriter
             while(true)
             {
                 int start=lastPos;
+                boolean foundLineFeed=true;
+                int end=content.indexOf("\n", start);
+                if(end<0)
+                {
+                    end= paragraph.getWrapPosition(content, start,firstLine);
+                    foundLineFeed=false;
+                }
                 
-                int end=paragraph.getWrapPosition(content, start,firstLine);
-                float xPosition=paragraph.getLeftX(firstLine);
-
                 if(end > content.length()){end=content.length();}
 
                 String string=content.substring(start, end);
+                float xPosition=paragraph.getLeftX(firstLine);
                 writeText(stream, xPosition, yPosition, string);
                 firstLine=false;
                 lastPos=end;
-                
+                if(foundLineFeed){lastPos++;}
                 yPosition=paragraph.getNextY(yPosition);
                 
                 if(end>=content.length()){break;}
