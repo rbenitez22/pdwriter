@@ -2,3 +2,11 @@
 /pdwriter/nbproject/
 /pdwriter/lib/CopyLibs/
 /pdwriter/lib/nblibraries.properties
+/pdwriter/dist/
+/pdwriter/build/
+/pdwriter/lib/junit_4/junit-4.12-sources.jar
+/pdwriter/lib/jsoup-1.9.2-sources.jar
+/pdwriter/lib/jsoup-1.9.2-javadoc.jar
+/pdwriter/lib/junit_4/junit-4.12-javadoc.jar
+/pdwriter/lib/cssparser-0.9.19-sources.jar
+/pdwriter/lib/cssparser-0.9.19-javadoc.jar
