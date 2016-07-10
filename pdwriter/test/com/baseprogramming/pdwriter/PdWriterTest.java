@@ -18,7 +18,6 @@ package com.baseprogramming.pdwriter;
 import com.baseprogramming.dev.gen.DataFactory;
 import com.baseprogramming.pdwriter.model.Borders;
 import com.baseprogramming.pdwriter.model.Margin;
-import com.baseprogramming.pdwriter.model.PageMetadata;
 import com.baseprogramming.pdwriter.model.PdColumn;
 import com.baseprogramming.pdwriter.model.PdList;
 import com.baseprogramming.pdwriter.model.PdParagraph;
@@ -26,7 +25,6 @@ import com.baseprogramming.pdwriter.model.PdTable;
 import com.baseprogramming.pdwriter.model.PdTableHeader;
 import com.baseprogramming.pdwriter.units.PdInch;
 import com.baseprogramming.pdwriter.units.PdPoints;
-import com.baseprogramming.pdwriter.units.PdUnit;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -36,6 +34,7 @@ import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -77,7 +76,7 @@ public class PdWriterTest
              String last=DataFactory.getLastName().getWord();
              Date date = DataFactory.genDate(1910, 2015);
              String dob=format.format(date);
-             int count=rand.nextInt(10) +2;
+             int count=rand.nextInt(5) +2;
              String memo=DataFactory.genWords(count);
              
              Map<String,Object> row= new HashMap<>();
@@ -145,7 +144,9 @@ public class PdWriterTest
         try(PDDocument doc = new PDDocument())
         {
             PdWriter writer =new PdWriter(doc, margin);
+           
             PdTable table= writer.createTable("First Name","Middle Name","Last Name","D.O.B","Memo");
+            
             Borders border= new Borders(3, 1, 2, 1);
             table.setCellPadding(new PdPoints(10));
             table.setRowBorder(1);
@@ -199,84 +200,33 @@ public class PdWriterTest
             Margin margin= new Margin(0.75f, 0.2f, 0.5f, 0.25f);
             PdWriter writer= new PdWriter(pdDoc, margin);
             
+            PdParagraph title=writer.createParagraph();
+            title.setFont(PDType1Font.TIMES_BOLD);
+            title.setFontSize(24);
+            title.setAboveSpacing(new PdInch(0.75f));
+            title.setBelowSpacing(new PdInch(0.75f));
+            
             PdParagraph heading=writer.createParagraph();
-            heading.setFont(PDType1Font.TIMES_BOLD);
-            heading.setFontSize(24);
-            heading.setAboveSpacing(new PdInch(0.75f));
-            heading.setBelowSpacing(new PdInch(0.75f));
+            heading.setFont(PDType1Font.TIMES_BOLD_ITALIC);
+            heading.setFontSize(16);
+            heading.setAboveSpacing(new PdInch(0.1f));
             
             PdParagraph body = writer.createParagraph();
-            body.setFirstLineIndent(new PdInch(0.3f));
             body.setBelowSpacing(new PdInch(0.17f));
             
             PdParagraph code=writer.createParagraph();
             code.setFont(PDType1Font.COURIER);
             code.setBeforeTextIndent(new PdInch(0.5f));
-            code.setAboveSpacing(new PdInch(0.3f));
-            code.setBelowSpacing(new PdInch(0.3f));
+            code.setAboveSpacing(new PdInch(0.1f));
+            code.setBelowSpacing(new PdInch(0.1f));
             
-            writer.write(heading, "PdWriter Class");
-            writer.write(body,"The PdWriter class (com.baseprogramming.pdwriter.PdWriter) is a class that demonstrates how to use the Apache project PDFBox.  More so, it demonstrates how PDFBox can be extended to provide a more user-friendly interface to write content to PDF--without having to worry about breaking up a large chunk of text such that it fits in a page.");
+            writer.write(title, "PdWriter Class");
             
-            writer.write(body,"This class attempts to emulate a basic word processor approach, where text is written in paragraphs(PdParagraph class), and each paragraph has settings such as font and spacing.");
-            writer.write(body,"The PdWriter class has two constructors");
-            writer.write(code,"public PdWriter(PDDocument document, Margin margin)");
-            writer.write(body,"And");
-            writer.write(code," public PdWriter(PageMetadata meta, PDDocument document)");
+            writeBasicParagraphDemo(writer, body, code,heading);
             
-            writer.write(body, "The Margin class stores margin information (Top, Left, Bottom, and Right).  The margins are stored as a PdUnit. The concept of a PdUnit (as with all other code in this project) is an experimental concept; its goal is to provide a client with a wide range of options for units of measures.  Currently, the available units of measure are: PdInch, PdMillimeters,PdPica, PdPixels, and Points.  All units of measure convert the given value to points--the standard unit of measure in graphic systems;  the PdPoints class merely echos the value given.");
+            writeListDemo(writer, body, code,heading);
             
-            writer.write(body,"The PageMetadata class has basic page information(Margin and PDRectangle), and has methods to compute page boundaries.  The default PDRectangle is PDRectangle.LETTER");
-            
-            writer.write(body,"To get started with the PdWriter class, create create an instance:");
-            writer.write(code,"Margin margin= new Margin(0.75f, 0.2f, 0.5f, 0.25f);\n" +
-                                "PdWriter writer= new PdWriter(pdDoc, margin);");
-            
-            writer.write(body,"Then create one (or more) PdParagraph objects:");
-            writer.write(code,"PdParagraph heading=writer.createParagraph();\n" +
-                                "heading.setFont(PDType1Font.TIMES_BOLD);\n" +
-                                "heading.setFontSize(24);\n" +
-                                "heading.setAboveSpacing(new PdInch(0.75f));\n" +
-                                "heading.setBelowSpacing(new PdInch(0.75f));\n" +
-                                "\n" +
-                                "PdParagraph body = writer.createParagraph();\n" +
-                                "body.setFirstLineIndent(new PdInch(0.3f));\n" +
-                                "body.setBelowSpacing(new PdInch(0.17f));\n" +
-                                "\n" +
-                                "PdParagraph code=writer.createParagraph();\n" +
-                                "code.setFont(PDType1Font.COURIER);\n" +
-                                "code.setBeforeTextIndent(new PdInch(0.5f));\n" +
-                                "code.setAboveSpacing(new PdInch(0.3f));\n" +
-                                "code.setBelowSpacing(new PdInch(0.3f));");
-            
-            writer.write(body,"Write text (paragraphs, by calling the method PdWriter.write(PdParagraph,String):");
-            writer.write(code,"writer.write(body,\"Write text (paragraphs, by calling the method PdWriter.write(PdParagraph,String):\");");
-            writer.write(body,"Note that where is a write(String) method, that creates its own PdParagraph instance with the default values.");  
-            
-            PdList list= PdList.numeredList(writer.getMeta());
-            
-            writer.write(body,"It is also possible to write a numbered or bullet list--use the class PdList, which extends PdParagraph.  Use the factory method numberedList(PageMetadata) to create a numbered list paragraph style:");
-            writer.write(code,"PdList list= PdList.numeredList(writer.getMeta());");
-            
-            writer.write(body,"Or");
-            
-            writer.write(code,"PdList list= PdList.bulletList(writer.getMeta());");
-            
-            writer.write(body,"to create a bullet list.  The line of code:");
-            
-            writer.write(code,"writer.write(list, \"Java\",\"C++\",\"Python\");");
-            
-            writer.write(body,"generates the following numbered list:");
-            writer.write(list, "Java","C++","Python");
-            
-            writer.write(body,"A List of String can also be passed");
-            
-            list=PdList.bulletList(writer.getMeta());
-            writer.write(body, "To create a bullet list, simple use the other factory method:");
-            writer.write(code,"list=PdList.bulletList(writer.getMeta());");
-            writer.write(body,"and call the PdWriter write(PdList,...) method as with the numbered list:");
-            writer.write(list, "Java","C++","Python");
-            
+            writeTableDemo(writer, heading, body, code);
             
             pdDoc.save(new File("c:/tmp/PdWriter-Demo.pdf"));
         }
@@ -284,6 +234,142 @@ public class PdWriterTest
         {
             e.printStackTrace();
         }
+    }
+
+    private void writeTableDemo(PdWriter writer, PdParagraph heading, PdParagraph body, PdParagraph code) throws IOException
+    {
+        writer.write(heading, "Printing Tables");
+        PdList list=writer.createNumberedPdList();
+        list.setBelowSpacing(new PdInch(0.1f));
+        writer.write(body, "It is also possible to print a data table.  This is a more complex process, and requires the uses of three additional classes:");
+        writer.write(list, "PdColumn","PdTableHeader","PdTable");
+        writer.write(body, "The PdColumn class holds basic column information: label, name (for later reference and matching to the row data). and width.  The PdTableHeader class contains the column definitions (PdColumn list) as well as header font information.  Finally, the PdTable, which extends PdParagraph, contains the table header as well as additional border information.  This class is used by the PdWriter class to write the table--given the data set.  At the momment, the dat asset must passed as a list of mapps, with the map representing the a row, with keys that correspond to the name in the PdColumn entries in the PdTableHeader.  A PdTable instance can be created by calling one of the helper methods in the PdWriter class:");
+        
+        writer.write(code,"PdTable table = writer.createTable(\"First Name\",\"Middle Name\",\"Last Name\",\"D.O.B\",\"Memo\");");
+        
+        writer.write(body,"Or");
+        
+        writer.write(code,"PdTable table = writer.createTable()");
+        
+        writer.write(body, "The columns must be created and added later when using this method.");
+        
+        writer.write(body,"The table exterior borders, cell padding, cell spacing, row border, column borders can be speciried as follows:");
+        
+        writer.write(code," Borders border= new Borders(3, 1, 2, 1);\n" +
+                "table.setCellPadding(new PdPoints(10));\n" +
+                "table.setRowBorder(1);\n" +
+                "table.setColumnBorder(1);\n" +
+                "table.setBorder(border);");
+        
+        writer.write(body,"Consider that there exists a method called getDataTable(int) that generates the list of maps needed to supply the table data:");
+        
+        writer.write(code,"List<Map<String,Object>> data=getDataTable(10);");
+        
+        writer.write(body,"The column widths can be calculated automatically by calling the PdTable method calculateColumnWidths:");
+        
+        writer.write(code,"table.calculateColumnWidths(data, 5);");
+        
+        writer.write(body,"This method uses row count specified (5 in the this example) to calculate an adequate column width based on the column data size.  After having calculated, individual column widths can be updated as follows:");
+        
+        writer.write(code,"PdTableHeader header=table.getHeader();\n" +
+                "header.setFont(PDType1Font.TIMES_BOLD);\n" +
+                "PdColumn memo=header.getColumn(\"Memo\");\n" +
+                "memo.setWidth(new PdInch(2));");
+        
+        writer.write(body,"Finally, the table can be printed as follows:");
+        writer.write(code,"writer.write(table,data);");
+        
+        PdTable table= writer.createTable("First Name","Middle Name","Last Name","D.O.B","Memo");
+        
+        Borders border= new Borders(3, 1, 2, 1);
+        table.setCellPadding(new PdPoints(10));
+        table.setRowBorder(1);
+        table.setColumnBorder(1);
+        table.setBorder(border);
+        
+        PdTableHeader header=table.getHeader();
+        header.setFont(PDType1Font.TIMES_BOLD);
+        
+        List<Map<String,Object>> data=getDataTable(10);
+        table.calculateColumnWidths(data, 5);
+        
+        PdColumn memo=header.getColumn("Memo");
+        memo.setWidth(new PdInch(2));
+        
+        writer.write(table,data);
+    }
+
+    private void writeBasicParagraphDemo(PdWriter writer,PdParagraph body, PdParagraph code,PdParagraph heading) throws IOException
+    {
+        writer.write(heading,"Writing Paragraphs");
+        
+        writer.write(body,"The PdWriter class (com.baseprogramming.pdwriter.PdWriter) is a class that demonstrates how to use the Apache project PDFBox.  More so, it demonstrates how PDFBox can be extended to provide a more user-friendly interface to write content to PDF--without having to worry about breaking up a large chunk of text such that it fits in a page.");
+        
+        writer.write(body,"This class attempts to emulate a basic word processor approach, where text is written in paragraphs(PdParagraph class), and each paragraph has settings such as font and spacing.");
+        writer.write(body,"The PdWriter class has two constructors");
+        writer.write(code,"public PdWriter(PDDocument document, Margin margin)");
+        writer.write(body,"And");
+        writer.write(code," public PdWriter(PageMetadata meta, PDDocument document)");
+        
+        writer.write(body, "The Margin class stores margin information (Top, Left, Bottom, and Right).  The margins are stored as a PdUnit. The concept of a PdUnit (as with all other code in this project) is an experimental concept; its goal is to provide a client with a wide range of options for units of measures.  Currently, the available units of measure are: PdInch, PdMillimeters,PdPica, PdPixels, and Points.  All units of measure convert the given value to points--the standard unit of measure in graphic systems;  the PdPoints class merely echos the value given.");
+        
+        writer.write(body,"The PageMetadata class has basic page information(Margin and PDRectangle), and has methods to compute page boundaries.  The default PDRectangle is PDRectangle.LETTER");
+        
+        writer.write(body,"To get started with the PdWriter class, create create an instance:");
+        writer.write(code,"Margin margin= new Margin(0.75f, 0.2f, 0.5f, 0.25f);\n" +
+                "PdWriter writer= new PdWriter(pdDoc, margin);");
+        
+        writer.write(body,"Then create one (or more) PdParagraph objects:");
+        writer.write(code,"PdParagraph heading=writer.createParagraph();\n" +
+                "heading.setFont(PDType1Font.TIMES_BOLD);\n" +
+                "heading.setFontSize(24);\n" +
+                "heading.setAboveSpacing(new PdInch(0.75f));\n" +
+                "heading.setBelowSpacing(new PdInch(0.75f));\n" +
+                "\n" +
+                "PdParagraph body = writer.createParagraph();\n" +
+                "body.setFirstLineIndent(new PdInch(0.3f));\n" +
+                "body.setBelowSpacing(new PdInch(0.17f));\n" +
+                "\n" +
+                "PdParagraph code=writer.createParagraph();\n" +
+                "code.setFont(PDType1Font.COURIER);\n" +
+                "code.setBeforeTextIndent(new PdInch(0.5f));\n" +
+                "code.setAboveSpacing(new PdInch(0.3f));\n" +
+                "code.setBelowSpacing(new PdInch(0.3f));");
+        
+        writer.write(body,"Write text (paragraphs, by calling the method PdWriter.write(PdParagraph,String):");
+        writer.write(code,"writer.write(body,\"Write text (paragraphs, by calling the method PdWriter.write(PdParagraph,String):\");");
+        writer.write(body,"Note that where is a write(String) method, that creates its own PdParagraph instance with the default values.");
+    }
+
+    private void writeListDemo(PdWriter writer, PdParagraph body, PdParagraph code,PdParagraph heading) throws IOException
+    {
+        writer.write(heading, "Numbered and Bullet Lists");
+        PdList list= writer.createNumberedPdList();
+        list.setBelowSpacing(new PdInch(0.17f));
+        list.setBeforeTextIndent(new PdInch(0.3f));
+        writer.write(body,"It is also possible to write a numbered or bullet list--use the class PdList, which extends PdParagraph.  Use the createNumberedPdList method of the PdWriter class to create list paragraph style:");
+        writer.write(code,"PdList list= writer.createNumberedPdList();");
+        
+        writer.write(body,"Or");
+        
+        writer.write(code,"PdList list= writer.createBulletPdList();");
+        
+        writer.write(body,"to create a bullet list.  The line of code:");
+        
+        writer.write(code,"writer.write(list, \"Java\",\"C++\",\"Python\");");
+        
+        writer.write(body,"generates the following numbered list:");
+        writer.write(list, "Java","C++","Python");
+        
+        writer.write(body,"A List of String can also be passed");
+        
+        list=writer.createBulletPdList();
+        list.setBelowSpacing(new PdInch(0.17f));
+        list.setBeforeTextIndent(new PdInch(0.3f));
+        writer.write(body, "To create a bullet list, use the createBulletPdList method:");
+        writer.write(code,"list=writer.createBulletPdList();");
+        writer.write(body,"and call the PdWriter write(PdList,...) method as with the numbered list:");
+        writer.write(list, "Java","C++","Python");
     }
     
     @Test public void testTextFileToPdf()
