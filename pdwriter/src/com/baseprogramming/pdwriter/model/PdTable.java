@@ -251,9 +251,15 @@ public class PdTable extends PdParagraph
 
     public void calculateColumnWidths(List<Map<String, Object>> data, int rowsToSample) throws IOException
     {
+        float spacing=2*getSpacingAndPaddingGap();
         for (PdColumn column : header.getColumns())
         {
-            float width = calculateColumnWidth(column, rowsToSample, data);
+            
+            float width = spacing+calculateColumnWidth(column, rowsToSample, data);
+            float labelWidth=spacing+header.getFont().getStringWidth(column.getLabel())/1000;
+            
+            if(labelWidth > width){width=labelWidth;}
+            
             column.setWidth(new PdPoints(width));
         }
     }
