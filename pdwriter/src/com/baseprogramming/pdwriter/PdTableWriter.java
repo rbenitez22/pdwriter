@@ -60,6 +60,8 @@ public class PdTableWriter implements AutoCloseable
     {
         PdTableHeader header=table.getHeader();
         createStreamIfNull();
+        stream.setFont(header.getFont(), header.getFontSize());
+        
         float xPosition = table.getFirstColumnXPosition();
         float topY = table.getStartYPosition();
         float y=topY - (table.getSpacingAndPaddingGap() + table.getLineHeight());
