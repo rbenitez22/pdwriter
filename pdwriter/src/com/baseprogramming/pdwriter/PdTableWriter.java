@@ -90,6 +90,7 @@ public class PdTableWriter implements AutoCloseable
     {
         initYPosition();
         writeColumnHeaders();
+        stream.setFont(table.getFont(), table.getFontSize());
         try
         {   
            drewRowBorder=false;
