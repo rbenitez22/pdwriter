@@ -81,6 +81,17 @@ public class PdWriter
     {
         return new PdParagraph(meta);
     }
+    
+    public PdList createBulletPdList()
+    {
+        return PdList.bulletList(meta);
+    }
+    
+    public PdList createNumberedPdList()
+    {
+        return PdList.numeredList(meta);
+    }
+        
 
     public PageMetadata getMeta()
     {
