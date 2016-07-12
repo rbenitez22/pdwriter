@@ -367,13 +367,22 @@ public class PdWriter
 
     /**
      * Draw an image on the current page.
+     * @param imageFile File containing image
+     * @param style  paragraph style to use for any applicable spacing
+     */
+    public void drawImage(File imageFile,PdParagraph style)
+    {
+        drawImage(imageFile, style, 0,0);
+    }
+    /**
+     * Draw an image on the current page.
      * @param imageFile File containing image.
      * @param style paragraph style to use
      * @param width image width. Uses image actual width if argument is less than or equal to 0
      * @param height image height. Uses image actual height if argument is less than or equal to 0
      * @throws RuntimeException 
      */
-    public void drawImage(File imageFile,PdParagraph style,float width, float height) throws RuntimeException
+    public void drawImage(File imageFile,PdParagraph style,float width, float height) 
     {
         try
         {
@@ -381,11 +390,11 @@ public class PdWriter
             
             float actualWidth = (width<=0)?imageObject.getWidth():width;
             float actualHeight = (height <= 0)? imageObject.getHeight():height;
-            yPosition -= height;
+            yPosition -= actualHeight;
             if (yPosition <= meta.getLowerLeftY())
             {
                 createNewPage();
-                yPosition -= height;
+                yPosition -= actualHeight;
                 if (yPosition < meta.getLowerLeftY())
                 {
                     yPosition = meta.getLowerLeftY();
