@@ -220,7 +220,8 @@ public class PdParagraph
 
     public float getLineHeight()
     {
-        return fontSize * lineSpacing;
+        float descent=font.getFontDescriptor().getDescent() / 1000;
+        return (fontSize + Math.abs(descent))* lineSpacing;
     }
     
     public int getWrapPosition(String string,int start,boolean firstLine) throws IOException
