@@ -49,6 +49,7 @@ public class PdTable extends PdParagraph
         header = new PdTableHeader(columns, getFont(), getFontSize());
         cellPadding = new PdPoints(0);
         cellSpacing = new PdPoints(0);
+        setBelowSpacing();
     }
 
     public PdTable(PageMetadata page, String... names)
@@ -57,12 +58,20 @@ public class PdTable extends PdParagraph
         header = createTableHeader(names);
         cellPadding = new PdPoints(0);
         cellSpacing = new PdPoints(0);
+        setBelowSpacing();
 
     }
 
     public PdTable(PageMetadata page)
     {
         this(page, new LinkedList<>());
+        setBelowSpacing();
+    }
+
+    private void setBelowSpacing()
+    {
+        PdUnit units=new PdPoints(getLineHeight()+getBorder().getBottom());
+        super.setBelowSpacing(units);
     }
 
     public PdTableHeader getHeader()
