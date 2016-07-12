@@ -25,6 +25,7 @@ import com.baseprogramming.pdwriter.model.PdTable;
 import com.baseprogramming.pdwriter.model.PdTableHeader;
 import com.baseprogramming.pdwriter.units.PdInch;
 import com.baseprogramming.pdwriter.units.PdPoints;
+import com.baseprogramming.pdwriter.units.PdUnit;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -228,12 +229,32 @@ public class PdWriterTest
             
             writeTableDemo(writer, heading, body, code);
             
+            writeImageDemo(writer,heading, body, code);
+            
             pdDoc.save(new File("c:/tmp/PdWriter-Demo.pdf"));
         }
         catch (Exception e)
         {
             e.printStackTrace();
         }
+    }
+
+    private void writeImageDemo(PdWriter writer,PdParagraph heading, PdParagraph body, PdParagraph code) throws IOException
+    {
+        writer.write(heading,"Printing Images");
+        writer.write(body,"Though not much work is saved, the PdWriter class also has two methods to write an image.  This line of code: ");
+        writer.write(code,"writer.drawImage(new File(\"c:/tmp/moon1.png\"), body, 240,240);");
+        writer.write(body,"prints the following image--resized to 240x240");
+        
+        writer.drawImage(new File("c:/tmp/moon1.png"), body, 240,240);
+        
+        writer.write(body,"while");
+        writer.write(code,"writer.drawImage(new File(\"c:/tmp/moon1.png\"), body);");
+        writer.write(body,"prints the follwing image--using its actual size.  the sourece image is actually quite large, and does not fit in the page--and thus only part of the image is printed");
+        
+        writer.drawImage(new File("c:/tmp/moon1.png"), body);
+        
+        writer.write(body,"Generally, it would be best to resize the image to a more acceptable size");
     }
 
     private void writeTableDemo(PdWriter writer, PdParagraph heading, PdParagraph body, PdParagraph code) throws IOException
@@ -286,6 +307,7 @@ public class PdWriterTest
         table.setRowBorder(1);
         table.setColumnBorder(1);
         table.setBorder(border);
+        table.setBelowSpacing(new PdInch(0.3f));
         
         PdTableHeader header=table.getHeader();
         header.setFont(PDType1Font.TIMES_BOLD);
