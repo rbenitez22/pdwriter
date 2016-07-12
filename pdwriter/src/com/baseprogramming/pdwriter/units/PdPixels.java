@@ -32,7 +32,7 @@ public class PdPixels implements PdUnit
         }
         
         this.pixels=pixels;
-        points=(pixels / dpi) * PdUnit.POINTS_PER_INCH;
+        points=pixels * PdUnit.POINTS_PER_INCH / dpi;
     }
 
     public float getPixels()
