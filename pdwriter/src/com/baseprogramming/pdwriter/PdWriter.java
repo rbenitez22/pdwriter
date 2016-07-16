@@ -191,7 +191,7 @@ public class PdWriter
         
         return wrapped;
     }
-
+    
     public void drawVerticalLine(float lineWidth, float x, float y1, float y2) throws IOException
     {
         try(PDPageContentStream stream = createStream())
@@ -206,6 +206,19 @@ public class PdWriter
         stream.setLineWidth(lineWidth);
         stream.moveTo(x, y1);
         stream.lineTo(x, y2);
+    }
+    
+    public void drawHorizontalLine() throws IOException
+    {
+        drawHorizontalLine(1);
+    }
+    
+    public void drawHorizontalLine(float lineWidth) throws IOException
+    {
+        float x1=meta.getLowerLeftX();
+        float x2=meta.getUpperRightX();
+        float y=getLastYPosition();
+        drawHorizontalLine(lineWidth, x1, y, x2);
     }
 
     public void drawHorizontalLine(float lineWidth, float x1, float y, float x2) throws IOException
