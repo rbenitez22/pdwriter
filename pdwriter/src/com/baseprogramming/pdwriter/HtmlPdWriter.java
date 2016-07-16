@@ -303,6 +303,7 @@ public class HtmlPdWriter
         @Override public void head(Node node, int depth)
         {
             String name = node.nodeName();
+            
             setNodeIdIfMissing(node);
             
             if(writingTable)
@@ -424,7 +425,7 @@ public class HtmlPdWriter
                 writingList=false;
             }
             
-            if("#text".equals(name)==false && writingList==false)
+            if(!("head".equals(name) || "#text".equals(name) ||  writingList))
             {
                 handleEndOfBlock(node, name);
                 nodeParagraphMaps.remove(id);
