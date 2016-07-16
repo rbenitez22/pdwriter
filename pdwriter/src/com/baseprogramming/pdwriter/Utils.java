@@ -23,6 +23,7 @@ import com.baseprogramming.pdwriter.units.PdUnit;
 import com.steadystate.css.parser.CSSOMParser;
 import com.steadystate.css.parser.SACParserCSS3;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -156,6 +157,17 @@ public final class Utils
     {
         CSSStyleSheet css=parseStyleSheet(cssSource);
         Map<String, Map<String, CSSValue>> map = Utils.createCssRuleMap(css);
+        return map;
+    }
+    
+    public static  Map<String, Map<String, CSSValue>> getHtmlCssMap(File cssSource) throws IOException
+    {
+         Map<String, Map<String, CSSValue>> map;
+        try(InputStream is= new FileInputStream(cssSource))
+        {
+            map=getHtmlCssMap(is);
+        }
+        
         return map;
     }
         
