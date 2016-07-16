@@ -230,6 +230,11 @@ public class PdWriter
         stream.moveTo(x1, y);
         stream.lineTo(x2, y);
     }
+    
+    public void createPageBreak() throws IOException
+    {
+        createNewPage();
+    }
 
     public void write(PdList list,String ...items) throws IOException
     {
