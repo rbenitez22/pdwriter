@@ -246,10 +246,12 @@ public class PdWriterTest
         writer.write(heading,"Writing HTML");
         writer.write(body,"The PdWriter class also has rudimentary HTML writing capabilities.  Consider the following snapshot (partial) of an HTML file):");;
         writer.drawImage(new File("c:/tmp/html-sample-snapshot.png"), body);
+        
+        writer.createPageBreak();
         writer.write(body,"The output looks as follows:");
         
         writer.drawHorizontalLine(2);
-        
+        writer.decreaseYPosition(16);
         writer.writeHtml(new File("c:/tmp/html-input-simple.html"));
         
         writer.drawHorizontalLine(2);
@@ -265,12 +267,14 @@ public class PdWriterTest
         writer.writeHtml("<p style=\"font-style: italic;padding-left: 10px;\">This is a paragraph printed with the <b>writeHtml</b>(String) method.</p>");
         
         writer.write(body,"Currently, Jsoup and cssparser are used to write HTML.");
-        writer.write(body,"Admittedly, the output is not exactly purdy, but it does illustrate the potential.");
+        
         writer.write(body,"It is also possible to include an HTML table.  However, minimal style attributes are considered at the moment.  See sample below");
         writer.writeHtml(new File("c:/tmp/html-input-table.html"));
         
         writer.write(body,"The following image shows a partial view of the HTML markup from which the table above was generated");
         writer.drawImage(new File("c:/tmp/html-table-snapshot.png"), body,331,268);
+        
+        writer.write(body,"Admittedly, the output is not exactly purdy, but it does illustrate the potential.");
     }
 
     private void writeImageDemo(PdWriter writer,PdParagraph heading, PdParagraph body, PdParagraph code) throws IOException
