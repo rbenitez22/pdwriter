@@ -143,23 +143,17 @@ public class PdWriter
         return document;
     }
     
-     public void writeHtml(String html) throws IOException
-     {
-         HtmlPdWriter tmp= new HtmlPdWriter(this);
-         tmp.write(html);
-     }
-     
-     public void writeHtml(File htmlSourceFile,String rootElement) throws IOException
+    public void writeHtml(String html) throws IOException
     {
-         HtmlPdWriter tmp= new HtmlPdWriter(this);
-         tmp.write(htmlSourceFile, rootElement);
+        HtmlPdWriter tmp = new HtmlPdWriter(this);
+        tmp.write(html);
     }
-     
-     public void writeHtml(File htmlSourceFile) throws IOException
-     {
-         HtmlPdWriter tmp= new HtmlPdWriter(this);
-         tmp.write(htmlSourceFile);
-     }
+
+    public void writeHtml(File htmlSourceFile) throws IOException
+    {
+        HtmlPdWriter tmp = new HtmlPdWriter(this);
+        tmp.write(htmlSourceFile);
+    }
     
     public void write(PdTable table, List<Map<String,Object>> data) throws IOException
     {

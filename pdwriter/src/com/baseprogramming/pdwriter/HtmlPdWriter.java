@@ -125,15 +125,7 @@ public class HtmlPdWriter
         Document document=Jsoup.parse(html);
         document.traverse(new NodeTextWriter(this));
     }
-    
-    public void write(File htmlSourceFile,String rootElement) throws IOException
-    {
-        Document document=Jsoup.parse(htmlSourceFile,"UTF-8");
-        
-        Element root=document.getElementsByTag(rootElement).first();
-        root.traverse(new NodeTextWriter(this));
-    }
-    
+  
     public void write(File htmlSourceFile) throws IOException
     {
         Document document=Jsoup.parse(htmlSourceFile,"UTF-8");
