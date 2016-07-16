@@ -32,8 +32,8 @@ public class PdPixelsTest
     @Test
     public void testSomeMethod()
     {
-        float pixels=96;
-        float dpi=150;
+        float pixels=32;
+        float dpi=96;
         PdUnit units= new PdPixels(pixels,dpi);
         
         System.out.printf("DPI: %s, pixels: %s, Points: %s\n",dpi,pixels,units.getPoints());
