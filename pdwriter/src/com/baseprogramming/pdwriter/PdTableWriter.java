@@ -208,7 +208,8 @@ public class PdTableWriter implements AutoCloseable
         createStreamIfNull();
         float x = table.getLeftX();
         float y1 = table.getStartYPosition();
-        float y2 = writer.getLastYPosition() - table.getCellPadding().getPoints() + table.getCellPadding().getPoints();
+
+        float y2 = writer.getLastYPosition();
         for (PdColumn column : table.getHeader().getColumns())
         {
             writer.drawVerticalLine(stream, table.getColumnBorder(), x, y1, y2);
