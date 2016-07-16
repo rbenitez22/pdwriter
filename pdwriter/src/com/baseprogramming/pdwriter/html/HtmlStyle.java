@@ -82,10 +82,11 @@ public class HtmlStyle extends PdParagraph
     
     private void  setupFromStyleMap(Map<String,CSSValue> style)
     {
-       setupFont(style); 
-       setupBorders(style);
-       setupPadding(style);
-       blockWidth=parseDimension(style, "width", new PdPoints(0));
+        setupFont(style);
+        setupBorders(style);
+        setupPadding(style);
+        //setupMargin(style);
+        blockWidth = parseDimension(style, "width", new PdPoints(0));
     }
     
     private void setupFont(Map<String,CSSValue> style)
@@ -185,6 +186,23 @@ public class HtmlStyle extends PdParagraph
         PdUnit right=parseDimension(style, "padding-right", all);
         PdUnit bottom=parseDimension(style, "padding-bottom", all);
         PdUnit left=parseDimension(style, "padding-left", all);
+        
+        setAboveSpacing(top);
+        setBelowSpacing(bottom);
+        setBeforeTextIndent(left);
+        setAfterTextIndent(right);
+        
+    }
+    
+    private void setupMargin(Map<String,CSSValue> style)
+    {
+        PdUnit def= new PdPoints(0);
+        PdUnit all=parseDimension(style, "margin", def);
+        
+        PdUnit top=parseDimension(style, "margin-top", all);
+        PdUnit right=parseDimension(style, "margin-right", all);
+        PdUnit bottom=parseDimension(style, "margin-bottom", all);
+        PdUnit left=parseDimension(style, "margin-left", all);
         
         setAboveSpacing(top);
         setBelowSpacing(bottom);
