@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -57,6 +58,8 @@ public class HtmlPdWriter
     private final Map<String,PdParagraph> nodeParagraphMaps = new HashMap<>();
     
     private float xPosition;
+    
+    
 
     public HtmlPdWriter(PdWriter writer)
     {
@@ -277,6 +280,20 @@ public class HtmlPdWriter
         
         return map;
     }
+    
+    public String getBaseUri(Node node)
+    {
+        if(node==null){return "";}
+        File file=new File(node.baseUri());
+        if(file.isFile())
+        {
+            return file.getParent();
+        }
+        else
+        {
+            return file.getAbsolutePath();
+        }
+    }
         
     public static Predicate<Element> formatElementFilter()
     {
@@ -305,7 +322,12 @@ public class HtmlPdWriter
             String name = node.nodeName();
             
             setNodeIdIfMissing(node);
-            
+     
+            if("link".equals(name))
+            {
+                handleLink(node);
+                return;
+            }
             if(writingTable)
             {
                 tableScanner.head(node, depth);
@@ -369,6 +391,29 @@ public class HtmlPdWriter
                 node.attr("id", id);
             }
         }
+        
+        private void handleLink(Node node)
+        {
+        if("link".equals(node.nodeName()) == false){return;}
+        String type=node.attr("type");
+        if("text/css".equals(type)==false){return;}
+        
+        
+        String uri=getBaseUri(node);
+        String href=node.attr("href");
+        String cssFilePath=Paths.get(uri, href).toString();
+        try
+        {
+            Map<String, Map<String, CSSValue>> css = Utils.getHtmlCssMap(new File(cssFilePath));
+            loadCssSelectorsIntoMaps(css);
+        }
+        catch(Exception e)
+        {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+         
+        
+    }
 
         private void drawImage(Node node, PdParagraph style) throws RuntimeException
         {
