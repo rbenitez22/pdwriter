@@ -49,7 +49,7 @@ public class HtmlPdWriter
 {
     private final AtomicLong nodeIdSequence =  new AtomicLong();
     private final PdWriter writer;
-    private float dpi=72;
+    private float dpi=96;
     private final Map<String,Map<String,CSSValue>> elementSelectors = new HashMap<>();
     private final Map<String,Map<String,CSSValue>> idSelectors = new HashMap<>();
     private final Map<String,Map<String,CSSValue>> classSelectors = new HashMap<>();
