@@ -18,6 +18,7 @@ package com.baseprogramming.pdwriter;
 import com.baseprogramming.dev.gen.DataFactory;
 import com.baseprogramming.pdwriter.model.Borders;
 import com.baseprogramming.pdwriter.model.Margin;
+import com.baseprogramming.pdwriter.model.PageMetadata;
 import com.baseprogramming.pdwriter.model.PdColumn;
 import com.baseprogramming.pdwriter.model.PdList;
 import com.baseprogramming.pdwriter.model.PdParagraph;
@@ -25,7 +26,7 @@ import com.baseprogramming.pdwriter.model.PdTable;
 import com.baseprogramming.pdwriter.model.PdTableHeader;
 import com.baseprogramming.pdwriter.units.PdInch;
 import com.baseprogramming.pdwriter.units.PdPoints;
-import com.baseprogramming.pdwriter.units.PdUnit;
+import com.github.rjeschke.txtmark.Processor;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -35,7 +36,6 @@ import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -176,14 +176,14 @@ public class PdWriterTest
     @Test
     public void testHtmlWriter()
     {
-        File input = new File("c:/tmp/html-input.html");
+        File input = new File("c:/tmp/html-input-simple.html");
         
-        File output= new File("c:/tmp/html-input.pdf");
+        File output= new File("c:/tmp/html-input-simple.pdf");
         Margin margin= new Margin(0.75f, 0.2f, 0.5f, 0.5f);
         try(PDDocument pdDoc = new PDDocument())
         {
             PdWriter writer= new PdWriter(pdDoc, margin);
-            writer.writeHtml(input, "body");
+            writer.writeHtml(input);
 
             pdDoc.save(output);
         }
@@ -231,12 +231,46 @@ public class PdWriterTest
             
             writeImageDemo(writer,heading, body, code);
             
+            writeHtmlDemo(writer, heading, body, code);
+            
             pdDoc.save(new File("c:/tmp/PdWriter-Demo.pdf"));
         }
         catch (Exception e)
         {
             e.printStackTrace();
         }
+    }
+
+    private void writeHtmlDemo(PdWriter writer, PdParagraph heading, PdParagraph body, PdParagraph code) throws IOException
+    {
+        writer.write(heading,"Writing HTML");
+        writer.write(body,"The PdWriter class also has rudimentary HTML writing capabilities.  Consider the following snapshot (partial) of an HTML file):");;
+        writer.drawImage(new File("c:/tmp/html-sample-snapshot.png"), body);
+        writer.write(body,"The output looks as follows:");
+        
+        writer.drawHorizontalLine(2);
+        
+        writer.writeHtml(new File("c:/tmp/html-input-simple.html"));
+        
+        writer.drawHorizontalLine(2);
+        writer.setLastYPosition(body.getNextY(writer.getLastYPosition()));
+        writer.write(body,"The file contents were written with the following line of code");
+        writer.write(code,"writer.writeHtml(new File(\"c:/tmp/html-input-simple.html\"));");
+        
+        writer.write(body,"It is also possible to pass an HTML snippet as follows:");
+        
+        writer.write(code,"writer.writeHtml(\"<p style=\\\"font-style: italic;padding-left: 10px;\\\">This is a paragraph printed with the <b>writeHtml</b>(String) method.</p>\");");
+        writer.write(body,"The output is:");
+        
+        writer.writeHtml("<p style=\"font-style: italic;padding-left: 10px;\">This is a paragraph printed with the <b>writeHtml</b>(String) method.</p>");
+        
+        writer.write(body,"Currently, Jsoup and cssparser are used to write HTML.");
+        writer.write(body,"Admittedly, the output is not exactly purdy, but it does illustrate the potential.");
+        writer.write(body,"It is also possible to include an HTML table.  However, minimal style attributes are considered at the moment.  See sample below");
+        writer.writeHtml(new File("c:/tmp/html-input-table.html"));
+        
+        writer.write(body,"The following image shows a partial view of the HTML markup from which the table above was generated");
+        writer.drawImage(new File("c:/tmp/html-table-snapshot.png"), body,331,268);
     }
 
     private void writeImageDemo(PdWriter writer,PdParagraph heading, PdParagraph body, PdParagraph code) throws IOException
@@ -446,5 +480,37 @@ public class PdWriterTest
             }
         }
         
+    }
+    
+    @Test public void testMarkdownTests()
+    {
+        try(PDDocument doc= new PDDocument())
+        {
+            Margin margin= new Margin(1.0f);
+            PdWriter writer= new PdWriter(doc, margin);
+            
+            
+            String html=Processor.process("Testing **markdown**.  Note how the word 'markdown' was converted.  How about a word _enclosed_ in underscores?.  Is that underlined? #what is this? ");
+            
+            writer.writeHtml(html);
+            System.out.println(Processor.process("#Extra Extra."));
+            writer.writeHtml(Processor.process("#Extra Extra."));
+            writer.writeHtml(Processor.process("##Not as important"));
+            writer.writeHtml(Processor.process("###Even less important"));
+            writer.writeHtml(Processor.process("####Hardly worth mentioning"));
+            
+            html=Processor.process("This is a plain paragraph");
+            System.out.println(html);
+            writer.writeHtml(html);
+            html=Processor.process(">I am not sure blockquotes have a scanner/handler.  However, adding a **blockquote** selector in the file --default-css.css-- can set the styles required.");
+            
+            writer.writeHtml(html);
+            System.out.println(html);
+            doc.save("c:/tmp/markdown-tests.pdf");
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 }
