@@ -32,7 +32,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -58,7 +57,6 @@ public class HtmlPdWriter
     private final Map<String,PdParagraph> nodeParagraphMaps = new HashMap<>();
     
     private float xPosition;
-    
     
 
     public HtmlPdWriter(PdWriter writer)
